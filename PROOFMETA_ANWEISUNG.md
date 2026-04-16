@@ -2,7 +2,7 @@
 
 > **What this document is:** The single source of truth for every AI agent, human developer, and tool (Claude Projects, Cursor, OpenClaw, etc.) working on ProofMeta. If it's not in this document, it's not decided yet.
 
-> **Last updated:** 2026-04-16 (JCS/RFC 8785 locked in as canonical serialization)
+> **Last updated:** 2026-04-16 (JCS, Apache-2.0, did:key-only v1 locked in)
 
 ---
 
@@ -72,7 +72,7 @@ These are non-negotiable. Every design decision must pass through these filters:
 | `proofmeta` | ✅ | Protocol version |
 | `payload` | ✅ | The actual content (any JSON object) |
 | `payload_hash` | ✅ | `sha256` of the JCS (RFC 8785) canonical serialization of `payload`. See §3.1.1. |
-| `author` | ✅ | DID or public-key identifier of who signed this |
+| `author` | ✅ | DID identifying the signer. v1 MUST support `did:key` with ed25519 (see §3.1.2). Other DID methods MAY appear; consumers MAY accept them by policy. |
 | `signature` | ✅ | `ed25519` signature over `payload_hash` by author's key |
 | `timestamp` | ✅ | ISO 8601 UTC timestamp (author-asserted) |
 | `in_reply_to` | ⚠️ context | `payload_hash` of the logically previous envelope in the same lifecycle. Required for status updates and reviews. Omitted for roots (identity, skill publication). |
@@ -112,6 +112,44 @@ payload_hash = "sha256:" + hex( sha256( jcs_serialize(payload) ) )
 - Sorted-keys-JSON has no spec and many subtle ambiguities (number formatting, unicode escapes, duplicate keys). Every ad-hoc implementation disagrees in edge cases.
 - CBOR is binary and deterministic-CBOR is a solid choice, but ProofMeta is human-readable first (Rule #4). JSON wins.
 - JCS is a real IETF standard, shipped in production systems (W3C VC Data Integrity, IETF SCITT), with multiple maintained implementations.
+
+#### 3.1.2 Identity (`author` field)
+
+The `author` field is a [W3C DID](https://www.w3.org/TR/did-core/). A DID is a URI of the form `did:<method>:<method-specific-id>` that resolves — by rules defined per method — to a public key.
+
+**v1 MUST-support method: `did:key` with ed25519**
+
+`did:key` is a self-contained DID method: the public key *is* the identifier. No DNS, no HTTPS, no registry — the verifier extracts the public key directly from the DID string.
+
+```
+did:key:z6MkhaXgBZDvotDkL5257faiztiGiC2QtKLGpbnnEGta2doK
+```
+
+The `z...` part is the multibase-encoded ed25519 public key with a multicodec prefix. A conforming verifier:
+1. Strips the `did:key:` prefix
+2. Decodes the multibase (base58-btc) string
+3. Strips the multicodec prefix (`0xed01` for ed25519)
+4. Uses the remaining 32 bytes as the ed25519 verification key
+
+Reference spec: [did:key Method v0.7](https://w3c-ccg.github.io/did-method-key/)
+
+**Why `did:key` only for v1**
+- ✅ Zero infrastructure — works offline, no DNS, no servers, no chains
+- ✅ A new Provider Agent can be operational in one line: `keypair = ed25519.generate()`
+- ✅ Satisfies Success Criterion #1 ("Provider in under 10 minutes")
+- ✅ Forward-compatible — other DID methods can be added later without breaking v1 envelopes
+
+**Other DID methods (`did:web`, `did:ethr`, `did:ion`, ...)**
+
+Envelopes MAY carry any syntactically-valid DID in `author`. The protocol does not forbid it. But v1 implementations only **guarantee** verification of `did:key`. Consumers that want to accept other methods do so by policy — e.g., *"I accept `did:web` if the domain resolves to a `.well-known/did.json` that contains the key."*
+
+`did:web` is planned for v1.1 as an **additive, non-breaking extension** — existing `did:key` envelopes stay valid forever.
+
+**What `author` is NOT**
+
+- Not a human name, not a company name, not an email. Those belong inside the payload (e.g., `payload.provider.name`).
+- Not a raw public key. Always a DID — this keeps the format uniform across DID methods.
+- Not a placeholder for identity proofs (DNS ownership, GitHub attestations, KYC). Those are separate signed envelopes that reference an `author` DID; see §3.3 for identity-proof extensibility.
 
 #### What Becomes Independently Verifiable
 
@@ -447,6 +485,7 @@ Read PROOFMETA_ANWEISUNG.md before making any architectural decisions.
 ProofMeta is a protocol, not a platform.
 Everything is a Signed Envelope — no bare JSON ever.
 payload_hash MUST be sha256 over JCS (RFC 8785) canonical form of payload. Never roll your own canonicalization.
+author MUST be a DID. v1 only guarantees verification of did:key with ed25519. Do not implement did:web or other DID methods without an explicit spec update.
 The status lifecycle (OPEN → PENDING → GRANTED/DENIED → REVOKED) is sacred.
 in_reply_to chains envelopes within a single request lifecycle — it is NOT a blockchain.
 Anchors are optional, pluggable, and never required by the protocol.
@@ -532,17 +571,51 @@ ProofMeta v1 is done when:
 | # | Question | Options | Decision |
 |---|----------|---------|----------|
 | 1 | Manifest discovery: well-known URL vs. registry vs. both? | `/.well-known/`, DNS TXT record, on-chain registry | TBD |
-| 2 | Identity: `did:key` only for v1, or also `did:web` / ENS / DNS proofs? | `did:key` minimal, others later | TBD |
-| 3 | Should the spec define a catalog query language or leave it freeform? | GraphQL subset, simple key-value, freeform | TBD |
-| 4 | ERC-7521 wrapping: design the interface now or wait for v2? | Now (spec only), v2 | TBD |
-| 5 | Licensing of ProofMeta itself: MIT, Apache 2.0, CC0? | Needs decision | TBD |
-| 6 | Where does the canonical spec live? GitHub, dedicated site, both? | Needs decision | TBD |
+| 2 | Should the spec define a catalog query language or leave it freeform? | GraphQL subset, simple key-value, freeform | TBD |
+| 3 | ERC-7521 wrapping: design the interface now or wait for v2? | Now (spec only), v2 | TBD |
+| 4 | Where does the canonical spec live? GitHub, dedicated site, both? | Needs decision | TBD |
 
 ### Decided Questions (locked in)
 
 | # | Question | Decision | Date |
 |---|----------|----------|------|
 | D1 | Canonical serialization for `payload_hash` | **JCS (RFC 8785)** — JSON Canonicalization Scheme | 2026-04-16 |
+| D2 | Licensing of ProofMeta (spec + code) | **Apache-2.0** for everything — code, spec, schemas, examples. Attribution required via `NOTICE` file. Copyright holder: Pandr UG (haftungsbeschränkt). | 2026-04-16 |
+| D3 | Identity method for v1 | **`did:key` with ed25519** is the only MUST-support method for v1. Syntactically-valid other DIDs MAY be present in `author` fields and consumers MAY accept them. `did:web` is planned for v1.1 as an additive extension (non-breaking). | 2026-04-16 |
+
+---
+
+## 11. License & Attribution
+
+ProofMeta is created and maintained by **Pandr UG (haftungsbeschränkt)**.
+
+The specification, reference SDKs, JSON Schemas, example agents, and all other material in this repository are licensed under the **Apache License, Version 2.0**.
+
+- Full license text: [`LICENSE`](./LICENSE)
+- Required attribution notice: [`NOTICE`](./NOTICE)
+
+### What this means in practice
+
+- ✅ You may use ProofMeta commercially, embed it in closed-source products, fork it, modify it, redistribute it.
+- ✅ You may build proprietary agents, resolvers, and services on top of ProofMeta without any copyleft obligation.
+- ⚠️ You **must** preserve copyright notices, the `LICENSE` file, and the contents of the `NOTICE` file when redistributing.
+- ⚠️ You **must** state significant changes you made to the source files.
+- ⚠️ Apache-2.0 includes a patent grant — if you sue anyone over patents covering your contribution, you lose the license.
+
+### Required attribution
+
+Any implementation, fork, or derivative of ProofMeta must retain the attribution contained in the `NOTICE` file:
+
+> ProofMeta
+> Copyright 2026 Pandr UG (haftungsbeschränkt)
+> Licensed under the Apache License, Version 2.0
+
+Source files include SPDX identifiers for automated license tooling:
+
+```typescript
+// Copyright 2026 Pandr UG (haftungsbeschränkt)
+// SPDX-License-Identifier: Apache-2.0
+```
 
 ---
 
