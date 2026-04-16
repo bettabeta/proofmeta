@@ -88,4 +88,7 @@ package.json            → npm workspaces (packages/*, examples/*)
 
 ## License
 
-GNU General Public License v3.0 — see [LICENSE](LICENSE)
+
+Copyright © 2026 Daud Zulfacar, Pandr UG (haftungsbeschränkt)
+
+This project is licensed under the Apache License 2.0  see the [LICENSE](LICENSE) file for details.
