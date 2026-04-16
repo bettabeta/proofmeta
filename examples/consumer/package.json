@@ -1,0 +1,6 @@
+{
+  "name": "@proofmeta/example-consumer",
+  "private": true,
+  "description": "Demo Consumer Agent (scaffold)",
+  "license": "GPL-3.0"
+}

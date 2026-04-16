@@ -53,6 +53,7 @@ OPEN → PENDING → GRANTED | DENIED
 - `/.well-known/proofmeta.json` — Provider manifest (discovery)
 - `/packages/spec/manifest.schema.json` — JSON Schema for manifest
 - `/packages/spec/request.schema.json` — JSON Schema for license requests
+- `/packages/spec/status.schema.json` — JSON Schema for status GET response (draft)
 
 ---
 

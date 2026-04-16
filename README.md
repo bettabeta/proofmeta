@@ -72,6 +72,8 @@ A Provider Agent publishes a manifest at `/.well-known/proofmeta.json`:
 /examples/provider      → Demo Provider Agent
 /examples/consumer      → Demo Consumer Agent
 /docs                   → Specification documentation
+package.json            → npm workspaces (packages/*, examples/*)
+.cursorrules            → Cursor IDE rules
 ```
 
 ## v1 Scope

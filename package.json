@@ -1,0 +1,16 @@
+{
+  "name": "proofmeta",
+  "private": true,
+  "description": "ProofMeta monorepo — protocol specs, SDK, reference resolvers, demos",
+  "license": "GPL-3.0",
+  "workspaces": [
+    "packages/*",
+    "examples/*"
+  ],
+  "scripts": {
+    "build": "npm run build -w @proofmeta/sdk-ts --if-present"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}
