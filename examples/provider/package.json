@@ -2,5 +2,5 @@
   "name": "@proofmeta/example-provider",
   "private": true,
   "description": "Demo Provider Agent (scaffold)",
-  "license": "GPL-3.0"
+  "license": "Apache-2.0"
 }

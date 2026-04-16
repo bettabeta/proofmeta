@@ -2,7 +2,7 @@
   "name": "proofmeta",
   "private": true,
   "description": "ProofMeta monorepo — protocol specs, SDK, reference resolvers, demos",
-  "license": "GPL-3.0",
+  "license": "Apache-2.0",
   "workspaces": [
     "packages/*",
     "examples/*"
