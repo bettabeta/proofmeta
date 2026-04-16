@@ -1,0 +1,121 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://proofmeta.org/schemas/v1/manifest.json",
+  "title": "ProofMeta Manifest",
+  "description": "Published by a Provider Agent at /.well-known/proofmeta.json",
+  "type": "object",
+  "required": ["proofmeta", "provider", "request_endpoint", "status_endpoint", "license_types"],
+  "additionalProperties": false,
+  "properties": {
+    "proofmeta": {
+      "type": "string",
+      "enum": ["1.0"],
+      "description": "Protocol version"
+    },
+    "provider": {
+      "type": "object",
+      "required": ["id", "name"],
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for this provider. Can be a DID, URL, or API key-based ID."
+        },
+        "name": {
+          "type": "string",
+          "description": "Human-readable name of the provider agent"
+        },
+        "description": {
+          "type": "string",
+          "description": "Optional description of what this provider offers"
+        }
+      }
+    },
+    "catalog_endpoint": {
+      "type": "string",
+      "format": "uri",
+      "description": "Optional endpoint for browsing available items"
+    },
+    "request_endpoint": {
+      "type": "string",
+      "format": "uri",
+      "description": "Endpoint where Consumer Agents POST license requests"
+    },
+    "status_endpoint": {
+      "type": "string",
+      "format": "uri",
+      "description": "Endpoint where Consumer Agents GET license request status"
+    },
+    "supported_resolvers": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "payment": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Supported payment resolvers e.g. stripe, lightning, erc20"
+        },
+        "delivery": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Supported delivery methods e.g. https, ipfs, arweave"
+        },
+        "verification": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Supported verification methods e.g. signed-jwt, erc721"
+        }
+      }
+    },
+    "license_types": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["id", "name", "terms_url", "terms_hash", "price_hint", "scope"],
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Machine-readable license type identifier"
+          },
+          "name": {
+            "type": "string",
+            "description": "Human-readable license name"
+          },
+          "terms_url": {
+            "type": "string",
+            "format": "uri",
+            "description": "URL to the full license text"
+          },
+          "terms_hash": {
+            "type": "string",
+            "pattern": "^sha256:[a-f0-9]+$",
+            "description": "SHA-256 hash of the license text for integrity verification"
+          },
+          "price_hint": {
+            "type": "object",
+            "required": ["amount", "currency"],
+            "additionalProperties": false,
+            "properties": {
+              "amount": {
+                "type": "string",
+                "description": "Indicative price as string e.g. '5.00' or '0'"
+              },
+              "currency": {
+                "type": "string",
+                "description": "Currency code e.g. USD, EUR, BTC"
+              }
+            }
+          },
+          "scope": {
+            "type": "array",
+            "minItems": 1,
+            "items": { "type": "string" },
+            "description": "Simple string tags describing what this license permits e.g. commercial, non-commercial, attribution-required, ai-training-excluded"
+          }
+        }
+      }
+    }
+  }
+}
