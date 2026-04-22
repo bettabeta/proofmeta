@@ -1,6 +1,0 @@
-{
-  "name": "@proofmeta/resolvers",
-  "private": true,
-  "description": "Reference resolver implementations (scaffold)",
-  "license": "Apache-2.0"
-}

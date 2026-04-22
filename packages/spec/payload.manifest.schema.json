@@ -1,0 +1,141 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://proofmeta.org/schemas/v1/payload.manifest.json",
+  "title": "ProofMeta Manifest Payload",
+  "description": "Payload schema for a License Manifest envelope. The outer envelope MUST validate against envelope.schema.json. See PROOFMETA_ANWEISUNG.md §3.3.",
+  "type": "object",
+  "required": ["type", "provider", "request_endpoint", "license_types"],
+  "additionalProperties": false,
+  "properties": {
+    "type": {
+      "type": "string",
+      "const": "manifest"
+    },
+    "provider": {
+      "type": "object",
+      "required": ["id"],
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^did:",
+          "description": "Provider's DID. Must match the envelope's author."
+        },
+        "name": {
+          "type": "string",
+          "description": "Optional human-readable name."
+        },
+        "description": {
+          "type": "string",
+          "description": "Optional human-readable description."
+        }
+      }
+    },
+    "request_endpoint": {
+      "type": "string",
+      "format": "uri",
+      "description": "URL where Consumers POST signed OPEN envelopes. Status is retrieved via GET {request_endpoint}/{request_id}."
+    },
+    "catalog_endpoint": {
+      "type": "string",
+      "format": "uri",
+      "description": "Optional query endpoint for browsing items (§3.8). Mutually recommended with omitting 'items'. A Manifest MUST provide either this field or 'items'."
+    },
+    "items": {
+      "type": "array",
+      "description": "Optional inline catalog for small providers. A Manifest MUST provide either this field or 'catalog_endpoint'. Entries follow the same shape as the catalog endpoint's items[].",
+      "items": {
+        "$ref": "#/definitions/catalogItem"
+      }
+    },
+    "resolvers": {
+      "type": "array",
+      "description": "Flat list of {role, id} pairs. Declares resolver implementations the Provider accepts. Roles include 'payment', 'delivery', 'anchor' and any future role identifier.",
+      "items": {
+        "$ref": "#/definitions/resolverEntry"
+      }
+    },
+    "license_types": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["id", "terms_url", "terms_hash", "scope"],
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Machine-readable license type identifier."
+          },
+          "name": {
+            "type": "string",
+            "description": "Optional human-readable license name."
+          },
+          "terms_url": {
+            "type": "string",
+            "format": "uri",
+            "description": "URL to the full license text."
+          },
+          "terms_hash": {
+            "type": "string",
+            "pattern": "^sha256:[a-f0-9]{64}$",
+            "description": "sha256 of the license text at terms_url."
+          },
+          "price_hint": {
+            "type": "object",
+            "description": "Optional non-binding price hint.",
+            "required": ["amount", "currency"],
+            "additionalProperties": false,
+            "properties": {
+              "amount": { "type": "string" },
+              "currency": { "type": "string" }
+            }
+          },
+          "scope": {
+            "type": "array",
+            "minItems": 1,
+            "description": "Must contain at least one tag from the normative core vocabulary (docs/scope-vocabulary.md). Extension tags MUST be URLs.",
+            "items": { "type": "string" }
+          }
+        }
+      }
+    }
+  },
+  "oneOf": [
+    { "required": ["catalog_endpoint"] },
+    { "required": ["items"] }
+  ],
+  "definitions": {
+    "resolverEntry": {
+      "type": "object",
+      "required": ["role", "id"],
+      "additionalProperties": false,
+      "properties": {
+        "role": {
+          "type": "string",
+          "description": "Resolver role, e.g. 'payment', 'delivery', 'anchor'."
+        },
+        "id": {
+          "type": "string",
+          "description": "Implementation identifier within the role, e.g. 'stripe', 'ipfs', 'solana-pda', 'none'."
+        }
+      }
+    },
+    "catalogItem": {
+      "type": "object",
+      "required": ["item_id", "name", "available_licenses"],
+      "additionalProperties": true,
+      "properties": {
+        "item_id": { "type": "string" },
+        "name": { "type": "string" },
+        "description": { "type": "string" },
+        "available_licenses": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "type": "string" }
+        },
+        "metadata": { "type": "object" }
+      }
+    }
+  }
+}

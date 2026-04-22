@@ -1,0 +1,45 @@
+{
+  "name": "@proofmeta/spec",
+  "version": "0.1.0",
+  "description": "ProofMeta v1 JSON Schemas — canonical machine-readable spec (envelope + payload schemas).",
+  "license": "Apache-2.0",
+  "type": "module",
+  "main": "./index.mjs",
+  "exports": {
+    ".": "./index.mjs",
+    "./envelope.schema.json": "./envelope.schema.json",
+    "./payload.manifest.schema.json": "./payload.manifest.schema.json",
+    "./payload.license-request.schema.json": "./payload.license-request.schema.json",
+    "./payload.status-update.schema.json": "./payload.status-update.schema.json"
+  },
+  "files": [
+    "index.mjs",
+    "envelope.schema.json",
+    "payload.manifest.schema.json",
+    "payload.license-request.schema.json",
+    "payload.status-update.schema.json",
+    "README.md"
+  ],
+  "keywords": [
+    "proofmeta",
+    "json-schema",
+    "licensing",
+    "agents",
+    "ai",
+    "protocol",
+    "did",
+    "signed-envelope"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/bettabeta/proofmeta.git",
+    "directory": "packages/spec"
+  },
+  "homepage": "https://github.com/bettabeta/proofmeta#readme",
+  "bugs": {
+    "url": "https://github.com/bettabeta/proofmeta/issues"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

@@ -4,11 +4,16 @@
   "description": "ProofMeta monorepo — protocol specs, SDK, reference resolvers, demos",
   "license": "Apache-2.0",
   "workspaces": [
-    "packages/*",
+    "packages/spec",
+    "packages/sdk-ts",
+    "packages/cli",
+    "packages/resolvers/*",
     "examples/*"
   ],
   "scripts": {
-    "build": "npm run build -w @proofmeta/sdk-ts --if-present"
+    "build": "npm run build -w @proofmeta/sdk-ts --if-present",
+    "test": "npm run build && npm run test -w @proofmeta/sdk-ts --if-present && npm run test -w @proofmeta/cli --if-present && npm run test -w @proofmeta/example-provider --if-present && node scripts/e2e.mjs",
+    "e2e": "npm run build && node scripts/e2e.mjs"
   },
   "engines": {
     "node": ">=18"

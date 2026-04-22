@@ -33,35 +33,42 @@ OPEN → PENDING → GRANTED | DENIED
 
 ## Quick Start
 
-A Provider Agent publishes a manifest at `/.well-known/proofmeta.json`:
+A Provider Agent publishes a manifest at `/.well-known/proofmeta.json`. Every ProofMeta artifact is a **Signed Envelope** — the outer wrapper carries the author DID, the signature, and a hash of the payload. The manifest lives inside `payload`:
 
 ```json
 {
   "proofmeta": "1.0",
-  "provider": {
-    "id": "your-agent-id",
-    "name": "Your Agent Name"
+  "payload": {
+    "type": "manifest",
+    "provider": {
+      "id": "did:key:z6Mkh...",
+      "name": "Your Agent Name"
+    },
+    "request_endpoint": "https://youragent.ai/api/proofmeta/request",
+    "catalog_endpoint": "https://youragent.ai/api/proofmeta/catalog",
+    "resolvers": [
+      { "role": "payment",  "id": "stripe" },
+      { "role": "delivery", "id": "https" },
+      { "role": "anchor",   "id": "none" }
+    ],
+    "license_types": [
+      {
+        "id": "free-attribution",
+        "terms_url": "https://youragent.ai/terms/free",
+        "terms_hash": "sha256:...",
+        "scope": ["non-commercial", "attribution-required"]
+      }
+    ]
   },
-  "catalog_endpoint": "https://youragent.ai/api/proofmeta/catalog",
-  "request_endpoint": "https://youragent.ai/api/proofmeta/request",
-  "status_endpoint": "https://youragent.ai/api/proofmeta/status",
-  "supported_resolvers": {
-    "payment": ["stripe", "lightning"],
-    "delivery": ["https", "ipfs"],
-    "verification": ["signed-jwt"]
-  },
-  "license_types": [
-    {
-      "id": "free-attribution",
-      "name": "Free with Attribution",
-      "terms_url": "https://youragent.ai/terms/free",
-      "terms_hash": "sha256:...",
-      "price_hint": { "amount": "0", "currency": "USD" },
-      "scope": ["non-commercial", "attribution-required"]
-    }
-  ]
+  "payload_hash": "sha256:...",
+  "author": "did:key:z6Mkh...",
+  "signature": "ed25519:...",
+  "timestamp": "2026-04-21T10:00:00Z",
+  "anchors": []
 }
 ```
+
+Status is expressed through the envelope chain — a Consumer polls `GET {request_endpoint}/{request_id}` to retrieve the latest envelope or, with `?full=true`, the whole chain. See [`PROOFMETA_ANWEISUNG.md`](./PROOFMETA_ANWEISUNG.md) for the full spec and [`docs/scope-vocabulary.md`](./docs/scope-vocabulary.md) for the normative scope tags.
 
 ## Repository Structure
 

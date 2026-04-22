@@ -1,0 +1,36 @@
+{
+  "name": "@proofmeta/resolver-free",
+  "version": "0.1.0",
+  "description": "ProofMeta reference resolver: no-op 'free' payment resolver. Instantly confirms; carries no external dependencies. Used for Tier-1 flows and integration tests.",
+  "license": "Apache-2.0",
+  "type": "module",
+  "main": "./index.mjs",
+  "exports": {
+    ".": "./index.mjs"
+  },
+  "files": [
+    "index.mjs",
+    "README.md"
+  ],
+  "keywords": [
+    "proofmeta",
+    "resolver",
+    "free",
+    "licensing",
+    "agents",
+    "ai",
+    "protocol"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/bettabeta/proofmeta.git",
+    "directory": "packages/resolvers/free"
+  },
+  "homepage": "https://github.com/bettabeta/proofmeta#readme",
+  "bugs": {
+    "url": "https://github.com/bettabeta/proofmeta/issues"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

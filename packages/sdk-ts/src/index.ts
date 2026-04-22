@@ -1,13 +1,26 @@
+// Copyright 2026 Daud Zulfacar, Pandr UG (haftungsbeschränkt)
+// SPDX-License-Identifier: Apache-2.0
+
 /**
- * ProofMeta TypeScript SDK — scaffold.
- * Validate manifests/requests, call provider endpoints, helpers: TBD.
+ * ProofMeta reference TypeScript SDK. v1 primitives only —
+ * no chain, no payment, no delivery. Resolvers live in their own packages.
  */
 
-export const PROOFMETA_PROTOCOL_VERSION = "1.0" as const;
-
-export type ProofMetaStatus =
-  | "OPEN"
-  | "PENDING"
-  | "GRANTED"
-  | "DENIED"
-  | "REVOKED";
+export * from "./types.js";
+export { jcs } from "./jcs.js";
+export { hashPayload, hashesEqual } from "./hash.js";
+export {
+  DID_KEY_PREFIX,
+  encodeDidKey,
+  decodeDidKey,
+  isDidKeyEd25519,
+} from "./did-key.js";
+export { generateKeyPair, keyPairFromPrivate, type KeyPair } from "./keys.js";
+export {
+  createEnvelope,
+  verifyEnvelope,
+  verifyChain,
+  type CreateEnvelopeOptions,
+  type VerifyOptions,
+  type VerifyResult,
+} from "./envelope.js";

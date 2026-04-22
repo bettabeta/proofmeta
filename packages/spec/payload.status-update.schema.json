@@ -1,0 +1,43 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://proofmeta.org/schemas/v1/payload.status-update.json",
+  "title": "ProofMeta Status Update Payload",
+  "description": "Payload schema for PENDING / GRANTED / DENIED / REVOKED envelopes. The outer envelope MUST validate against envelope.schema.json, and its in_reply_to MUST point at the payload_hash of the previous envelope in the same lifecycle. See PROOFMETA_ANWEISUNG.md §3.4.",
+  "type": "object",
+  "required": ["type", "request_id", "status"],
+  "additionalProperties": true,
+  "properties": {
+    "type": {
+      "type": "string",
+      "const": "status.update"
+    },
+    "request_id": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Must match the OPEN envelope's request_id."
+    },
+    "status": {
+      "type": "string",
+      "enum": ["PENDING", "GRANTED", "DENIED", "REVOKED"]
+    },
+    "note": {
+      "type": "string",
+      "description": "Optional human-readable context for the state transition."
+    },
+    "delivery": {
+      "type": "object",
+      "description": "Typically attached to GRANTED envelopes. Opaque to the protocol.",
+      "additionalProperties": true,
+      "properties": {
+        "method": {
+          "type": "string",
+          "description": "Delivery method identifier matching a Manifest 'delivery' resolver id."
+        },
+        "url": {
+          "type": "string",
+          "format": "uri"
+        }
+      }
+    }
+  }
+}

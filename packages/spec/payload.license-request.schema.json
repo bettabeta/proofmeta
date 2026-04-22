@@ -1,0 +1,72 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://proofmeta.org/schemas/v1/payload.license-request.json",
+  "title": "ProofMeta License Request Payload",
+  "description": "Payload schema for the OPEN envelope of a license request lifecycle. The outer envelope MUST validate against envelope.schema.json and MUST NOT include in_reply_to (OPEN is a root). See PROOFMETA_ANWEISUNG.md §3.6.",
+  "type": "object",
+  "required": ["type", "request_id", "consumer", "provider_id", "item_id", "license_type", "terms_hash", "status"],
+  "additionalProperties": false,
+  "properties": {
+    "type": {
+      "type": "string",
+      "const": "license.request"
+    },
+    "request_id": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Consumer-generated, globally unique. UUID v7 recommended (sortable by time)."
+    },
+    "consumer": {
+      "type": "object",
+      "required": ["id"],
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^did:",
+          "description": "Consumer's DID. MUST match the envelope's author."
+        },
+        "callback_url": {
+          "type": "string",
+          "format": "uri",
+          "description": "Optional. Provider MAY push status updates here."
+        }
+      }
+    },
+    "provider_id": {
+      "type": "string",
+      "pattern": "^did:",
+      "description": "Binds the request to one specific Provider. The Provider MUST reject envelopes whose provider_id does not match its own DID. Combined with unique request_id and signed timestamp, this closes replay."
+    },
+    "item_id": {
+      "type": "string",
+      "description": "Item identifier from the Provider's catalog."
+    },
+    "license_type": {
+      "type": "string",
+      "description": "One of the Manifest's license_types[].id values."
+    },
+    "terms_hash": {
+      "type": "string",
+      "pattern": "^sha256:[a-f0-9]{64}$",
+      "description": "MUST match the Manifest's terms_hash for the chosen license_type."
+    },
+    "resolver_preferences": {
+      "type": "array",
+      "description": "Consumer's preferred resolver implementations per role. Same shape as Manifest 'resolvers'.",
+      "items": {
+        "type": "object",
+        "required": ["role", "id"],
+        "additionalProperties": false,
+        "properties": {
+          "role": { "type": "string" },
+          "id": { "type": "string" }
+        }
+      }
+    },
+    "status": {
+      "type": "string",
+      "const": "OPEN"
+    }
+  }
+}

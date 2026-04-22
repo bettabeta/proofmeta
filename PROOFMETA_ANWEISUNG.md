@@ -2,7 +2,7 @@
 
 > **What this document is:** The single source of truth for every AI agent, human developer, and tool (Claude Projects, Cursor, OpenClaw, etc.) working on ProofMeta. If it's not in this document, it's not decided yet.
 
-> **Last updated:** 2026-04-16 (all v1 design questions resolved — D1 through D7)
+> **Last updated:** 2026-04-21 (D1–D7 locked 2026-04-16; D8–D11 + cleanup applied 2026-04-21; Validator CLI shipped 2026-04-21)
 
 ---
 
@@ -190,33 +190,31 @@ Inspired by:
     "type": "manifest",
     "provider": {
       "id": "did:key:z6MkhBeatVault...",
-      "name": "BeatVault Agent",
-      "description": "Licensed music loops and stems"
+      "name": "BeatVault Agent"
     },
-    "catalog_endpoint": "https://beatvault.ai/api/proofmeta/catalog",
     "request_endpoint": "https://beatvault.ai/api/proofmeta/request",
-    "status_endpoint": "https://beatvault.ai/api/proofmeta/status",
-    "supported_resolvers": {
-      "payment": ["stripe", "lightning", "x402-svm"],
-      "delivery": ["https", "ipfs", "arweave"],
-      "anchor": ["solana-pda", "none"]
-    },
+    "catalog_endpoint": "https://beatvault.ai/api/proofmeta/catalog",
+    "resolvers": [
+      { "role": "payment",  "id": "stripe" },
+      { "role": "payment",  "id": "lightning" },
+      { "role": "delivery", "id": "https" },
+      { "role": "delivery", "id": "ipfs" },
+      { "role": "anchor",   "id": "solana-pda" },
+      { "role": "anchor",   "id": "none" }
+    ],
     "license_types": [
       {
         "id": "commercial-standard",
-        "name": "Standard Commercial License",
         "terms_url": "https://beatvault.ai/terms/commercial",
         "terms_hash": "sha256:a1b2c3...",
         "price_hint": { "amount": "5.00", "currency": "USD" },
-        "scope": ["commercial", "derivative", "ai-training-excluded"]
+        "scope": ["commercial", "derivative-allowed", "ai-training-excluded"]
       },
       {
-        "id": "free-attribution",
-        "name": "Free with Attribution",
-        "terms_url": "https://beatvault.ai/terms/free",
+        "id": "custom-eu-only",
+        "terms_url": "https://beatvault.ai/terms/eu",
         "terms_hash": "sha256:d4e5f6...",
-        "price_hint": { "amount": "0", "currency": "USD" },
-        "scope": ["non-commercial", "attribution-required"]
+        "scope": ["commercial", "https://beatvault.ai/scope/eu-only"]
       }
     ]
   },
@@ -228,12 +226,27 @@ Inspired by:
 }
 ```
 
+**Field rules:**
+
+| Field | Required | Notes |
+|-------|----------|-------|
+| `payload.type` | ✅ | MUST be `"manifest"` |
+| `payload.provider.id` | ✅ | DID identifying the Provider |
+| `payload.provider.name` / `.description` | ❌ | Human-readable, optional. Machine-first (Rule #4) |
+| `payload.request_endpoint` | ✅ | URL where Consumers POST signed OPEN envelopes |
+| `payload.catalog_endpoint` OR `payload.items` | ✅ (one of) | Either a query endpoint (§3.8) OR an inline `items` array. A small Provider with a handful of items MAY skip the endpoint and list them directly |
+| `payload.resolvers` | ❌ | Flat array of `{ role, id }` pairs. Declares which resolver implementations the Provider accepts. Roles include `payment`, `delivery`, `anchor`, and any future role identifier |
+| `payload.license_types` | ✅ | At least one entry |
+| `license_types[].id`, `.terms_url`, `.terms_hash`, `.scope` | ✅ | `scope` MUST contain at least one tag from the core vocabulary (see `docs/scope-vocabulary.md`). Additional scope entries MAY be URLs for provider-specific extensions |
+| `license_types[].name`, `.price_hint` | ❌ | Optional. Providers MAY omit `price_hint` for ask-to-price items |
+
 **Key design decisions:**
 - The whole manifest is a Signed Envelope. A consumer can verify the provider actually signed it.
-- `terms_hash` — the license text is hashed so agents can verify it hasn't changed since they agreed
-- `price_hint` — a *hint*, not a binding price. Actual price is confirmed during the request flow
-- `supported_resolvers` — tells the Consumer which payment, delivery and anchor options the provider will accept. The Consumer picks one it also supports. `"anchor": ["none"]` is valid.
-- `scope` — simple string array describing what the license allows. Deliberately not a complex rights language — keep it simple, let lawyers write the full terms at `terms_url`.
+- **No `status_endpoint`.** Status is queried via `GET {request_endpoint}/{request_id}`. One URL less to configure, and it keeps the endpoint surface RESTful.
+- **`resolvers` is a flat list of role/id pairs**, not a typed object. New resolver roles (escrow, identity-proof, arbitration, …) can appear without a protocol change — the role is just a string.
+- **`scope` has a normative core vocabulary + URL extensions.** Agents filter reliably on the core tags; jurisdiction- or provider-specific licenses extend via URL-typed tags without polluting the protocol.
+- `terms_hash` — the license text is hashed so agents can verify it hasn't changed since they agreed.
+- `price_hint` (when present) is a *hint*, not a binding price. Actual price is confirmed during the request flow.
 
 ### 3.4 The Status Lifecycle
 
@@ -253,6 +266,8 @@ OPEN → PENDING → GRANTED | DENIED
 | `REVOKED` | A previously granted license has been withdrawn | Provider Agent |
 
 **Each state transition is its own Signed Envelope.** `PENDING.in_reply_to == OPEN.payload_hash`. `GRANTED.in_reply_to == PENDING.payload_hash`. The chain of envelopes *is* the proof of the lifecycle.
+
+**There is no separate "status response" schema.** Status is expressed entirely through the envelope chain. A Consumer that wants the current status calls `GET {request_endpoint}/{request_id}` and receives either the latest envelope or the full chain (Provider's choice; the Provider MAY support both via `?full=true`). The latest envelope's `payload.status` field is the authoritative status; the chain is the authoritative history. Anything else would be a second source of truth, and the protocol refuses to own two sources of truth for the same fact.
 
 **ProofMeta does not care *why* a status changes.** It only records *that* it changed, *when*, and *who* changed it. The reason is metadata attached by the actor who made the change.
 
@@ -318,7 +333,7 @@ A consumer can implement any policy it wants: *"I only accept envelopes anchored
   "proofmeta": "1.0",
   "payload": {
     "type": "license.request",
-    "request_id": "req_abc123",
+    "request_id": "01JZKYH3M2GQ3XN6F1ABCDEFGH",
     "consumer": {
       "id": "did:key:z6MkhMarketingAgent...",
       "callback_url": "https://marketingagent.ai/proofmeta/callback"
@@ -327,11 +342,11 @@ A consumer can implement any policy it wants: *"I only accept envelopes anchored
     "item_id": "beat-001",
     "license_type": "commercial-standard",
     "terms_hash": "sha256:a1b2c3...",
-    "resolver_preferences": {
-      "payment": "stripe",
-      "delivery": "https",
-      "anchor": "none"
-    },
+    "resolver_preferences": [
+      { "role": "payment",  "id": "stripe" },
+      { "role": "delivery", "id": "https" },
+      { "role": "anchor",   "id": "none" }
+    ],
     "status": "OPEN"
   },
   "payload_hash": "sha256:...",
@@ -344,6 +359,25 @@ A consumer can implement any policy it wants: *"I only accept envelopes anchored
 
 This is the `OPEN` envelope. It has no `in_reply_to` because it is the root of its lifecycle.
 
+**Field rules:**
+
+| Field | Required | Notes |
+|-------|----------|-------|
+| `payload.type` | ✅ | MUST be `"license.request"` |
+| `payload.request_id` | ✅ | **Consumer-generated**, globally unique. UUID v7 recommended (sortable by time). The Consumer must know this ID at signing time — see "Why Consumer-generated" below |
+| `payload.consumer.id` | ✅ | Consumer's DID, MUST match `author` |
+| `payload.consumer.callback_url` | ❌ | Optional; Provider MAY push status updates here |
+| `payload.provider_id` | ✅ | Binds this request to one specific Provider. See "Replay protection" below |
+| `payload.item_id` | ✅ | From the Provider's catalog |
+| `payload.license_type` | ✅ | One of the Provider Manifest's `license_types[].id` |
+| `payload.terms_hash` | ✅ | MUST match the Manifest's entry for `license_type`. Proves the Consumer agrees to the exact terms the Provider published |
+| `payload.resolver_preferences` | ❌ | Flat array of `{ role, id }` — same shape as `resolvers` in the Manifest. Consumer declares which resolver implementation it wants to use per role |
+| `payload.status` | ✅ | MUST be `"OPEN"` in this envelope |
+
+**Why Consumer-generated `request_id`:** Rule #7 says every artifact is a Signed Envelope. The `OPEN` envelope is signed by the Consumer. A Provider-generated ID would require an unsigned round-trip (Consumer sends intent → Provider assigns ID → Consumer then signs), which breaks the primitive. UUID v7 is the recommended format because it is globally unique without coordination, and its embedded timestamp keeps debugging logs readable.
+
+**Replay protection.** `payload.provider_id` binds the signed envelope to one Provider. A Provider verifying an incoming `OPEN` MUST check that `provider_id` matches its own DID and reject otherwise. Combined with the globally-unique `request_id` and the signed `timestamp`, this prevents a captured `OPEN` envelope from being replayed against a different Provider or re-submitted to the same Provider.
+
 A subsequent `GRANTED` envelope from the provider would look like:
 
 ```json
@@ -351,7 +385,7 @@ A subsequent `GRANTED` envelope from the provider would look like:
   "proofmeta": "1.0",
   "payload": {
     "type": "status.update",
-    "request_id": "req_abc123",
+    "request_id": "01JZKYH3M2GQ3XN6F1ABCDEFGH",
     "status": "GRANTED",
     "note": "Payment confirmed by Stripe resolver",
     "delivery": { "method": "https", "url": "https://beatvault.ai/d/xyz" }
@@ -366,6 +400,8 @@ A subsequent `GRANTED` envelope from the provider would look like:
   ]
 }
 ```
+
+Status-update envelopes carry `payload.type = "status.update"`, the same `request_id`, the new `status` value, and an `in_reply_to` hash pointing at the previous envelope in the chain. `note`, `delivery`, and any other type-specific fields are additive and opaque to the protocol.
 
 ### 3.7 Discovery
 
@@ -435,7 +471,9 @@ Rejected outright. It violates First-Principle Rules #1 (protocol ≠ infrastruc
 
 ### 3.8 Catalog Query
 
-After Discovery (§3.7), a Consumer has the Manifest and knows the `catalog_endpoint`. This section defines how to query it.
+After Discovery (§3.7), a Consumer has the Manifest. If the Manifest declares a `catalog_endpoint`, this section defines how to query it.
+
+> **When a catalog endpoint is not needed.** A Provider with a small, stable set of items MAY list them directly inline as `payload.items` in the Manifest (see §3.3 field rules) and omit `catalog_endpoint`. Consumers that see inline `items` use them as the full catalog and skip the query step entirely — §3.8 only applies when `catalog_endpoint` is present. The inline `items` entries follow the same shape as the endpoint response's `items[]` below.
 
 #### Required Parameters
 
@@ -599,9 +637,11 @@ Consumer Agent                     Provider Agent
       |      anchors: [...] optional)     |
       |◄─────────────────────────────────|
       |                                   |
-      |  8. GET /status/{request_id}      |
-      |     (anytime, returns envelope    |
-      |      chain for verification)      |
+      |  8. GET {request_endpoint}/       |
+      |         {request_id}              |
+      |     (anytime, returns latest      |
+      |      envelope — or the full       |
+      |      chain with ?full=true)       |
       |─────────────────────────────────►|
 ```
 
@@ -672,16 +712,16 @@ Read PROOFMETA_ANWEISUNG.md. Then scaffold the repo:
 ## 8. v1 Scope (What to Build First)
 
 ### In scope for v1
-- [ ] Signed Envelope spec (JSON Schema + JCS/RFC 8785 canonical serialization rules)
-- [ ] Manifest spec (envelope-wrapped)
-- [ ] Catalog query spec (standard parameters + response format, §3.8)
-- [ ] License Request / Status Update envelope schemas
-- [ ] Status lifecycle state machine with `in_reply_to` validation
-- [ ] Anchor interface definition (just the shape — no specific anchor types required)
-- [ ] Reference TypeScript SDK: create/sign/verify envelopes, walk `in_reply_to` chain, publish manifest, submit request, check status
-- [ ] One reference Resolver (Free / no-op — instant GRANTED, no payment, no anchor)
-- [ ] Two demo agents (Provider, Consumer) completing a full Tier 1 flow (pure signature, no anchors)
-- [ ] Validator CLI tool (`proofmeta validate envelope.json`) — checks schema compliance, JCS-correct hash, valid signature, and `in_reply_to` chain integrity
+- [x] Signed Envelope spec (JSON Schema + JCS/RFC 8785 canonical serialization rules)
+- [x] Manifest spec (envelope-wrapped)
+- [x] Catalog query spec (standard parameters + response format, §3.8)
+- [x] License Request / Status Update envelope schemas
+- [x] Status lifecycle state machine with `in_reply_to` validation
+- [x] Anchor interface definition (just the shape — no specific anchor types required)
+- [x] Reference TypeScript SDK: create/sign/verify envelopes, walk `in_reply_to` chain
+- [x] One reference Resolver (Free / no-op — instant GRANTED, no payment, no anchor)
+- [x] Two demo agents (Provider, Consumer) completing a full Tier 1 flow (pure signature, no anchors)
+- [x] Validator CLI tool (`proofmeta validate envelope.json`) — checks schema compliance, JCS-correct hash, valid signature, and `in_reply_to` chain integrity
 - [ ] Canonical spec domain (e.g. `spec.proofmeta.org` or `proofmeta.dev`) — hosts the released spec version. GitHub remains the development repo.
 
 ### Target for v1.1 (still core, but after MVP)
@@ -728,6 +768,21 @@ All v1 design questions have been resolved. New questions will be added here as 
 | D5 | Catalog query language | **Minimal standard parameters.** Every `catalog_endpoint` MUST accept: `q` (free-text search), `license_type` (filter by license type ID from manifest), `limit`/`offset` (pagination). Providers MAY support additional parameters. Response is a JSON array of item stubs (not Signed Envelopes — catalog results are ephemeral, not binding). See §3.8. | 2026-04-16 |
 | D6 | ERC-7521 wrapping | **Deferred to v2.** §5 remains as philosophical alignment and conceptual mapping. No formal wrapping interface will be specified until real-world resolver experience (especially the Solana resolver in v1.1) provides data on what the interface actually needs. | 2026-04-16 |
 | D7 | Where the canonical spec lives | **Dedicated domain** (e.g. `spec.proofmeta.org` or `proofmeta.dev`). GitHub (`github.com/bettabeta/proofmeta`) is the development repo. The domain hosts the current released spec version. Setup is a v1 launch task. | 2026-04-16 |
+| D8 | How status is expressed | **Envelope chain is the single source of truth.** No separate `status` response schema. `GET {request_endpoint}/{request_id}` returns the latest envelope (or the full chain via `?full=true`). `payload.status` on the latest envelope is the authoritative status; the chain is the authoritative history. See §3.4. | 2026-04-21 |
+| D9 | Shape of resolver declarations | **Flat list of `{ role, id }` pairs**, in both Manifest (`resolvers`) and Request (`resolver_preferences`). Adding a new role (escrow, identity-proof, arbitration, …) is an ecosystem concern and requires no protocol change. See §3.3, §3.6. | 2026-04-21 |
+| D10 | Whether the Manifest must declare a catalog endpoint | **`catalog_endpoint` OR inline `items` — one of.** Small Providers with a handful of items MAY list them directly in the Manifest; larger Providers use the query endpoint (§3.8). Consumers treat both identically. See §3.3, §3.8. | 2026-04-21 |
+| D11 | Scope vocabulary for license terms | **Normative core vocabulary + URL extensions.** A small closed set of tags (`commercial`, `non-commercial`, `derivative-allowed`, `attribution-required`, `ai-training-allowed`, `ai-training-excluded`, `sublicense-allowed`, `revocable`) is normative so agents can filter reliably. Provider- or jurisdiction-specific tags appear as URLs (e.g. `https://beatvault.ai/scope/eu-only`). See `docs/scope-vocabulary.md`. | 2026-04-21 |
+
+### Small Decisions (2026-04-21 cleanup)
+
+These are consistency and robustness fixes applied alongside D8–D11. None change the protocol's surface area; they tighten wording or remove ambiguity.
+
+| # | What changed | Why |
+|---|--------------|-----|
+| S1 | `payload.request_id` is Consumer-generated, UUID v7 recommended | Rule #7 — `OPEN` is already signed by the Consumer, so the ID must be known at signing time. UUID v7 is globally unique without coordination and sortable by time for readable logs. |
+| S2 | `provider_id` in the License Request envelope is explicitly for replay protection | A captured `OPEN` envelope cannot be replayed against a different Provider. Combined with unique `request_id` + signed `timestamp`, replay is closed. |
+| S3 | Status-update envelopes carry `payload.type = "status.update"` | Makes envelope type self-describing in logs and schemas; no need to infer type from `status` field. |
+| S4 | `name` / `description` / `price_hint` are optional in the Manifest | Machine-first (Rule #4). Human labels are nice-to-have; ask-to-price items are valid. |
 
 ---
 

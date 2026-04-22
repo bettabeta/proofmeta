@@ -1,0 +1,84 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://proofmeta.org/schemas/v1/envelope.json",
+  "title": "ProofMeta Signed Envelope",
+  "description": "The single primitive of the ProofMeta protocol. Every manifest, license request, and status update is wrapped in a Signed Envelope. See PROOFMETA_ANWEISUNG.md §3.1.",
+  "type": "object",
+  "required": ["proofmeta", "payload", "payload_hash", "author", "signature", "timestamp", "anchors"],
+  "additionalProperties": false,
+  "properties": {
+    "proofmeta": {
+      "type": "string",
+      "enum": ["1.0"],
+      "description": "Protocol version"
+    },
+    "payload": {
+      "type": "object",
+      "description": "The actual content being signed. Shape depends on payload.type — see payload.manifest, payload.license-request, payload.status-update schemas.",
+      "required": ["type"],
+      "properties": {
+        "type": {
+          "type": "string",
+          "description": "Discriminator: 'manifest' | 'license.request' | 'status.update' (other values MAY appear for extension payload types)."
+        }
+      }
+    },
+    "payload_hash": {
+      "type": "string",
+      "pattern": "^sha256:[a-f0-9]{64}$",
+      "description": "sha256 of the JCS (RFC 8785) canonical serialization of payload. Lowercase hex."
+    },
+    "author": {
+      "type": "string",
+      "pattern": "^did:",
+      "description": "DID identifying the signer. v1 MUST support did:key with ed25519 (see §3.1.2). Consumers MAY accept other DID methods by policy."
+    },
+    "signature": {
+      "type": "string",
+      "pattern": "^ed25519:",
+      "description": "ed25519 signature over the payload_hash string, produced by the author's key."
+    },
+    "timestamp": {
+      "type": "string",
+      "format": "date-time",
+      "description": "ISO 8601 UTC timestamp asserted by the author."
+    },
+    "in_reply_to": {
+      "type": "string",
+      "pattern": "^sha256:[a-f0-9]{64}$",
+      "description": "payload_hash of the logically previous envelope in the same lifecycle. Required for status updates and reviews. Omitted for roots (manifest, license.request)."
+    },
+    "anchors": {
+      "type": "array",
+      "description": "Optional external anchors. Empty array means none. See §3.5.",
+      "items": {
+        "$ref": "#/definitions/anchor"
+      }
+    }
+  },
+  "definitions": {
+    "anchor": {
+      "type": "object",
+      "required": ["type", "reference"],
+      "additionalProperties": true,
+      "properties": {
+        "type": {
+          "type": "string",
+          "description": "Anchor-type identifier, e.g. 'solana-pda', 'evm-contract', 'arweave-tx', 'rfc3161'."
+        },
+        "reference": {
+          "type": "string",
+          "description": "The anchor reference (PDA address, tx hash, timestamp blob, ...). Opaque to the protocol."
+        },
+        "chain": {
+          "type": "string",
+          "description": "Network identifier when the anchor type is chain-based."
+        },
+        "authority": {
+          "type": "string",
+          "description": "Issuing authority when the anchor type is authority-based (e.g. RFC 3161 TSA URL)."
+        }
+      }
+    }
+  }
+}
