@@ -44,7 +44,8 @@ export interface Envelope<P extends PayloadBase = PayloadBase> {
   signature: Ed25519SigRef;
   timestamp: string; // ISO 8601 UTC
   in_reply_to?: Sha256Ref;
-  anchors: Anchor[];
+  /** Tier-3 external anchors. Omitted for Tier-1 envelopes; present (non-empty) when the envelope is backed by a chain or timestamp authority. */
+  anchors?: Anchor[];
 }
 
 // ── Manifest ──────────────────────────────────────────────────────────────
@@ -74,6 +75,13 @@ export interface CatalogItem {
   name: string;
   description?: string;
   available_licenses: string[];
+  /**
+   * sha256 of the item's canonical byte representation.
+   * SHOULD be present for static content so Consumers can verify delivered
+   * bytes match the licensed item. Absent for dynamic items (services, APIs,
+   * streams) — in that case a license does not bind to any specific bytes.
+   */
+  content_hash?: Sha256Ref;
   metadata?: Record<string, unknown>;
 }
 

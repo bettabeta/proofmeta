@@ -4,7 +4,7 @@
   "title": "ProofMeta Signed Envelope",
   "description": "The single primitive of the ProofMeta protocol. Every manifest, license request, and status update is wrapped in a Signed Envelope. See PROOFMETA_ANWEISUNG.md §3.1.",
   "type": "object",
-  "required": ["proofmeta", "payload", "payload_hash", "author", "signature", "timestamp", "anchors"],
+  "required": ["proofmeta", "payload", "payload_hash", "author", "signature", "timestamp"],
   "additionalProperties": false,
   "properties": {
     "proofmeta": {
@@ -50,7 +50,7 @@
     },
     "anchors": {
       "type": "array",
-      "description": "Optional external anchors. Empty array means none. See §3.5.",
+      "description": "Optional external anchors. MAY be omitted entirely; an empty array is also valid. See §3.5.",
       "items": {
         "$ref": "#/definitions/anchor"
       }

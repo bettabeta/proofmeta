@@ -134,6 +134,11 @@
           "minItems": 1,
           "items": { "type": "string" }
         },
+        "content_hash": {
+          "type": "string",
+          "pattern": "^sha256:[a-f0-9]{64}$",
+          "description": "Optional. sha256 of the item's canonical byte representation. Providers of static content SHOULD include this so Consumers can verify the bytes delivered via the GRANTED envelope match what was licensed. Absent for dynamic items (services, APIs, streams); in that case a license does not bind the licensee to any specific byte sequence."
+        },
         "metadata": { "type": "object" }
       }
     }

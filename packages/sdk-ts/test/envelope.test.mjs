@@ -84,10 +84,39 @@ test("createEnvelope + verifyEnvelope roundtrip (manifest)", async () => {
   assert.equal(env.proofmeta, PROOFMETA_PROTOCOL_VERSION);
   assert.equal(env.author, kp.did);
   assert.match(env.signature, /^ed25519:[a-f0-9]+$/);
-  assert.deepEqual(env.anchors, []);
+  // anchors field is omitted when no anchors are supplied (Tier-1 default).
+  assert.equal(env.anchors, undefined);
 
   const v = await verifyEnvelope(env);
   assert.equal(v.ok, true, v.ok ? "" : v.reason);
+});
+
+test("createEnvelope includes anchors when supplied", async () => {
+  const kp = await generateKeyPair();
+  const env = await createEnvelope({
+    payload: { type: "manifest" },
+    author: kp.did,
+    privateKey: kp.privateKey,
+    anchors: [{ type: "rfc3161", reference: "blob:abc", authority: "https://tsa.test" }],
+  });
+  assert.ok(Array.isArray(env.anchors));
+  assert.equal(env.anchors.length, 1);
+  assert.equal(env.anchors[0].type, "rfc3161");
+
+  const v = await verifyEnvelope(env);
+  assert.equal(v.ok, true, v.ok ? "" : v.reason);
+});
+
+test("createEnvelope omits anchors when passed empty array", async () => {
+  // Explicit [] behaves the same as undefined — canonical form stays minimal.
+  const kp = await generateKeyPair();
+  const env = await createEnvelope({
+    payload: { type: "manifest" },
+    author: kp.did,
+    privateKey: kp.privateKey,
+    anchors: [],
+  });
+  assert.equal(env.anchors, undefined);
 });
 
 test("verifyEnvelope detects tampered payload", async () => {

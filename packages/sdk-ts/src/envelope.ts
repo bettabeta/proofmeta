@@ -40,7 +40,7 @@ export interface CreateEnvelopeOptions<P extends PayloadBase> {
   timestamp?: string;
   /** payload_hash of the logically previous envelope in the same lifecycle. */
   in_reply_to?: Sha256Ref;
-  /** External anchors. Defaults to []. */
+  /** Tier-3 external anchors. Omitted from the envelope when empty or absent. */
   anchors?: Anchor[];
 }
 
@@ -60,7 +60,7 @@ export async function createEnvelope<P extends PayloadBase>(
     privateKey,
     timestamp = new Date().toISOString(),
     in_reply_to,
-    anchors = [],
+    anchors,
   } = opts;
 
   if (isDidKeyEd25519(author)) {
@@ -87,9 +87,9 @@ export async function createEnvelope<P extends PayloadBase>(
     author,
     signature,
     timestamp,
-    anchors,
   };
   if (in_reply_to !== undefined) envelope.in_reply_to = in_reply_to;
+  if (anchors !== undefined && anchors.length > 0) envelope.anchors = anchors;
   return envelope;
 }
 

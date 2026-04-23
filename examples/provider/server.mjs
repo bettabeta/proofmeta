@@ -19,6 +19,7 @@
  */
 
 import http from "node:http";
+import { createHash } from "node:crypto";
 import {
   generateKeyPair,
   createEnvelope,
@@ -54,6 +55,14 @@ const licenseTypes = [
   },
 ];
 
+// Deterministic demo bytes representing the skill pack. A real Provider would
+// hash the actual tarball/zip/file served at delivery.url.
+const skillPackBytes = Buffer.from(
+  "ProofMeta demo skill pack — cost-optimizer-skill@0.1 — deterministic fixture",
+  "utf-8",
+);
+const skillPackContentHash = `sha256:${createHash("sha256").update(skillPackBytes).digest("hex")}`;
+
 const inlineItems = [
   {
     item_id: "cost-optimizer-skill@0.1",
@@ -61,6 +70,7 @@ const inlineItems = [
     description:
       "Claude skill pack that analyzes LLM configs and proposes cost-reducing edits. Validated on ProofMeta Scanner telemetry (40–70% cost reduction, ~€105/month avg savings).",
     available_licenses: ["free-attribution"],
+    content_hash: skillPackContentHash,
     metadata: { format: "skill-pack", version: "0.1.0" },
   },
 ];

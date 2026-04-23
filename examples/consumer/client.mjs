@@ -50,6 +50,9 @@ const licenseTypeId = item.available_licenses[0];
 const licenseType = manifest.license_types.find((lt) => lt.id === licenseTypeId);
 if (!licenseType) fail(`manifest missing license_type "${licenseTypeId}"`);
 console.log(`[consumer] selected item=${item.item_id} license_type=${licenseType.id}`);
+if (item.content_hash) {
+  console.log(`[consumer] item declares content_hash=${item.content_hash} — a real Consumer would verify delivered bytes against this after GRANTED`);
+}
 
 // ── 3. Sign OPEN envelope ─────────────────────────────────────────────────
 

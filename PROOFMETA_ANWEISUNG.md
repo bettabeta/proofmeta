@@ -62,8 +62,7 @@ These are non-negotiable. Every design decision must pass through these filters:
   "author": "did:key:z6Mkh...",
   "signature": "ed25519:...",
   "timestamp": "2026-04-16T10:00:00Z",
-  "in_reply_to": "sha256:...",
-  "anchors": []
+  "in_reply_to": "sha256:..."
 }
 ```
 
@@ -76,7 +75,7 @@ These are non-negotiable. Every design decision must pass through these filters:
 | `signature` | ✅ | `ed25519` signature over `payload_hash` by author's key |
 | `timestamp` | ✅ | ISO 8601 UTC timestamp (author-asserted) |
 | `in_reply_to` | ⚠️ context | `payload_hash` of the logically previous envelope in the same lifecycle. Required for status updates and reviews. Omitted for roots (identity, skill publication). |
-| `anchors` | ❌ | Optional array of external anchors (see §3.5). Empty array means no anchors. |
+| `anchors` | ❌ | Optional array of external anchors (see §3.5). MAY be omitted entirely for Tier-1 envelopes; when present, MUST be a non-empty array of valid anchor entries. |
 
 #### 3.1.1 Canonical Serialization (JCS / RFC 8785)
 
@@ -221,8 +220,7 @@ Inspired by:
   "payload_hash": "sha256:...",
   "author": "did:key:z6MkhBeatVault...",
   "signature": "ed25519:...",
-  "timestamp": "2026-04-16T09:00:00Z",
-  "anchors": []
+  "timestamp": "2026-04-16T09:00:00Z"
 }
 ```
 
@@ -352,8 +350,7 @@ A consumer can implement any policy it wants: *"I only accept envelopes anchored
   "payload_hash": "sha256:...",
   "author": "did:key:z6MkhMarketingAgent...",
   "signature": "ed25519:...",
-  "timestamp": "2026-04-16T10:00:00Z",
-  "anchors": []
+  "timestamp": "2026-04-16T10:00:00Z"
 }
 ```
 
@@ -506,6 +503,7 @@ The response is a plain JSON object (NOT a Signed Envelope — catalog results a
       "name": "Sunset Lofi Loop",
       "description": "80 BPM lofi hip-hop loop, 16 bars",
       "available_licenses": ["commercial-standard", "free-attribution"],
+      "content_hash": "sha256:a1b2c3...",
       "metadata": {}
     }
   ],
@@ -522,10 +520,17 @@ The response is a plain JSON object (NOT a Signed Envelope — catalog results a
 | `items[].name` | ✅ | Human-readable name |
 | `items[].description` | ❌ | Short description |
 | `items[].available_licenses` | ✅ | Array of license type IDs this item can be licensed under |
+| `items[].content_hash` | ❌ | `sha256` of the item's canonical byte representation. Providers of static content SHOULD include this so Consumers can verify delivered bytes match what was licensed. Absent for dynamic items (services, APIs, streams); a license GRANTED against an item without `content_hash` does not bind the licensee to any specific bytes. |
 | `items[].metadata` | ❌ | Provider-specific metadata (format, duration, tags, etc.). Opaque to the protocol. |
 | `total` | ✅ | Total number of matching items (for pagination) |
 | `limit` | ✅ | Echoed back |
 | `offset` | ✅ | Echoed back |
+
+#### Why `content_hash` is optional, not required
+
+Items come in two shapes: **static content** (a file, a dataset, a skill pack — bytes that can be hashed once and served forever) and **dynamic items** (an API endpoint, a streaming service, a compute capability — nothing to hash). Requiring `content_hash` would force dynamic-item Providers to either fabricate a hash or stand up fake static-content semantics. Making it optional with a strong SHOULD for static content preserves the signal for the cases where it matters.
+
+A Consumer that wants bytes-level trust sets the policy *"only GRANT-accept items that declare `content_hash`"* and does its own post-delivery verification. A Consumer that only needs lifecycle proof leaves the field alone. Both are valid uses.
 
 #### Why Not Signed Envelopes for Catalog Results?
 
@@ -772,6 +777,8 @@ All v1 design questions have been resolved. New questions will be added here as 
 | D9 | Shape of resolver declarations | **Flat list of `{ role, id }` pairs**, in both Manifest (`resolvers`) and Request (`resolver_preferences`). Adding a new role (escrow, identity-proof, arbitration, …) is an ecosystem concern and requires no protocol change. See §3.3, §3.6. | 2026-04-21 |
 | D10 | Whether the Manifest must declare a catalog endpoint | **`catalog_endpoint` OR inline `items` — one of.** Small Providers with a handful of items MAY list them directly in the Manifest; larger Providers use the query endpoint (§3.8). Consumers treat both identically. See §3.3, §3.8. | 2026-04-21 |
 | D11 | Scope vocabulary for license terms | **Normative core vocabulary + URL extensions.** A small closed set of tags (`commercial`, `non-commercial`, `derivative-allowed`, `attribution-required`, `ai-training-allowed`, `ai-training-excluded`, `sublicense-allowed`, `revocable`) is normative so agents can filter reliably. Provider- or jurisdiction-specific tags appear as URLs (e.g. `https://beatvault.ai/scope/eu-only`). See `docs/scope-vocabulary.md`. | 2026-04-21 |
+| D12 | `anchors` field requirement on envelopes | **Optional, not required.** The `anchors` array MAY be omitted entirely for Tier-1 envelopes. When present, it MUST be a non-empty array of valid anchor entries. The field exists solely to serve Tier-3 use cases (chain PDAs, RFC 3161 timestamps, Arweave transactions); Tier-1 envelopes shouldn't carry empty-array noise in their canonical form. See §3.1, §3.5. | 2026-04-23 |
+| D13 | Byte-level integrity for licensed items | **Optional `content_hash` on catalog items, SHOULD for static content.** Manifests and catalog results MAY include `content_hash: sha256:<hex>` on each item. Providers of static content (files, datasets, skill packs) SHOULD include it so Consumers can verify bytes delivered via the GRANTED envelope match what was licensed. Dynamic items (services, APIs, streams) SHOULD omit it. A license GRANTED against an item without `content_hash` does not bind the licensee to any specific byte sequence. See §3.3, §3.8. | 2026-04-23 |
 
 ### Small Decisions (2026-04-21 cleanup)
 
