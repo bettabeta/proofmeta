@@ -570,14 +570,77 @@
       Builder thread = soft opt-in, NOT a waitlist.
       Framing: updates from implementers as the protocol moves. Voice-consistent with "no permission, no sign-up wall."
       MailerLite form ID: 185530176070747374 (account 2287781)
+
+      Submission is intercepted by the inline script below — JSONP keeps the
+      user on-page instead of dumping them on assets.mailerlite.com with a raw
+      {"success":true} payload. Server-side fallback: MailerLite "After subscribe
+      → Redirect to URL" is pointed at /thanks.
     -->
-    <form class="builder-thread" action="https://assets.mailerlite.com/jsonp/2287781/forms/185530176070747374/subscribe" method="post" target="_blank" aria-label="Join the builder thread">
+    <form class="builder-thread" id="builder-thread" action="https://assets.mailerlite.com/jsonp/2287781/forms/185530176070747374/subscribe" method="post" aria-label="Join the builder thread">
       <input type="email" name="fields[email]" required placeholder="you@domain.com" aria-label="Email address" autocomplete="email">
       <button type="submit" class="btn">Join the builder thread →</button>
       <input type="hidden" name="ml-submit" value="1">
       <input type="hidden" name="anticsrf" value="true">
       <p class="hint">Low-volume updates as the spec moves. Nothing else. Unsubscribe in one click.</p>
     </form>
+
+    <script>
+      (function () {
+        var form = document.getElementById('builder-thread');
+        if (!form) return;
+
+        form.addEventListener('submit', function (e) {
+          e.preventDefault();
+          var emailInput = form.querySelector('input[type="email"]');
+          var button = form.querySelector('button[type="submit"]');
+          if (!emailInput.value) return;
+
+          button.disabled = true;
+          var originalLabel = button.textContent;
+          button.textContent = 'Joining…';
+
+          var cb = 'ml_cb_' + Date.now();
+          window[cb] = function (res) {
+            cleanup();
+            if (res && res.success) {
+              form.innerHTML =
+                '<p class="hint" style="color: var(--green); font-size: 13px; margin: 0;">' +
+                '✓ You\'re on the thread. Check your inbox — confirm the email and you\'re set.' +
+                '</p>';
+            } else {
+              button.disabled = false;
+              button.textContent = originalLabel;
+              var err = document.createElement('p');
+              err.className = 'hint';
+              err.style.color = 'var(--red)';
+              err.textContent = 'Something went wrong. Try again, or email daud@licenserocks.de direct.';
+              form.appendChild(err);
+            }
+          };
+
+          var params = new URLSearchParams({
+            'fields[email]': emailInput.value,
+            'ml-submit': '1',
+            'anticsrf': 'true',
+            'callback': cb
+          });
+
+          var script = document.createElement('script');
+          script.src = form.action + '?' + params.toString();
+          script.onerror = function () {
+            cleanup();
+            button.disabled = false;
+            button.textContent = originalLabel;
+          };
+          document.body.appendChild(script);
+
+          function cleanup() {
+            try { delete window[cb]; } catch (e) { window[cb] = undefined; }
+            if (script.parentNode) script.parentNode.removeChild(script);
+          }
+        });
+      })();
+    </script>
   </div>
 </section>
 

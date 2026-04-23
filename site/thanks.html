@@ -1,0 +1,313 @@
+<!doctype html>
+<html lang="en">
+<head>
+<!--
+  ProofMeta Protocol — /thanks (post-subscribe landing)
+
+  Reached after MailerLite's server-side "After subscribe → redirect to URL"
+  setting sends the subscriber here. Purpose: confirm the double opt-in is
+  coming, give the reader something real to do while the email lands, keep
+  the voice + palette consistent with /.
+
+  Not linked in the main nav. Served at https://proofmeta.com/thanks.
+-->
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>You're on the thread — ProofMeta Protocol</title>
+<meta name="description" content="Thanks for joining the builder thread. Check your inbox — a confirmation link is on the way.">
+<meta name="robots" content="noindex">
+<meta property="og:title" content="You're on the thread — ProofMeta Protocol">
+<meta property="og:description" content="Check your inbox — a confirmation link is on the way.">
+<meta property="og:type" content="website">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0b0b0b;
+    --surface: #151412;
+    --ink: #e8e3d5;
+    --muted: #8a8678;
+    --amber: #d4873c;
+    --green: #7ba05b;
+    --red: #c65b4e;
+    --hairline: rgba(232, 227, 213, 0.12);
+    --mono: 'JetBrains Mono', ui-monospace, 'SF Mono', Menlo, monospace;
+  }
+
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: var(--mono);
+    font-size: 15px;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+  ::selection { background: var(--amber); color: var(--bg); }
+  a { color: inherit; text-underline-offset: 3px; }
+  a:hover { color: var(--amber); }
+  a:focus-visible { outline: 2px solid var(--amber); outline-offset: 3px; }
+
+  .wrap { max-width: 960px; margin: 0 auto; padding: 0 24px; }
+
+  /* nav — matches / */
+  nav.top {
+    border-bottom: 1px solid var(--hairline);
+    padding: 14px 0;
+    font-size: 13px;
+    position: sticky; top: 0;
+    background: rgba(11,11,11,.92);
+    backdrop-filter: blur(8px);
+    z-index: 10;
+  }
+  nav.top .wrap { display: flex; justify-content: space-between; gap: 16px; flex-wrap: wrap; align-items: center; }
+  nav.top a.brand { color: var(--amber); font-weight: 700; letter-spacing: .02em; text-decoration: none; }
+  nav.top a.brand span { color: var(--ink); }
+  nav.top a.brand:hover { color: var(--amber); }
+  nav.top a.brand:hover span { color: var(--ink); }
+  nav.top .links { display: flex; gap: 20px; color: var(--muted); flex-wrap: wrap; }
+  nav.top .links a { text-decoration: none; }
+  nav.top .links a:hover { color: var(--ink); }
+
+  /* hero */
+  header.hero { padding: 96px 0 72px; border-bottom: 1px solid var(--hairline); }
+  .prompt { color: var(--muted); font-size: 13px; margin-bottom: 40px; line-height: 1.8; }
+  .prompt .cmd { color: var(--green); }
+  .prompt .out { color: var(--amber); }
+
+  h1.display {
+    font-size: clamp(34px, 5.8vw, 64px);
+    line-height: 1.03;
+    letter-spacing: -0.02em;
+    font-weight: 700;
+    margin: 0 0 28px;
+    max-width: 900px;
+  }
+  h1.display .dim { color: var(--muted); }
+
+  .subhead {
+    font-size: clamp(15px, 1.5vw, 17px);
+    color: var(--muted);
+    max-width: 620px;
+    margin: 0 0 40px;
+  }
+  .subhead strong { color: var(--ink); font-weight: 500; }
+
+  .cta-row { display: flex; gap: 12px; flex-wrap: wrap; align-items: center; }
+  .btn {
+    display: inline-flex; align-items: center; gap: 10px;
+    padding: 14px 20px;
+    border: 1px solid var(--ink);
+    color: var(--ink);
+    background: transparent;
+    text-decoration: none;
+    font-size: 14px;
+    font-weight: 500;
+    font-family: var(--mono);
+    cursor: pointer;
+    transition: transform .15s ease, background .15s ease, color .15s ease, box-shadow .15s ease, border-color .15s ease;
+  }
+  .btn:hover { background: var(--amber); color: var(--bg); border-color: var(--amber); transform: translate(-1px,-1px); box-shadow: 3px 3px 0 var(--ink); }
+  .btn.ghost { border-color: var(--hairline); color: var(--muted); }
+  .btn.ghost:hover { background: transparent; color: var(--amber); border-color: var(--amber); box-shadow: none; transform: none; }
+
+  /* sections */
+  section { padding: 72px 0; border-bottom: 1px solid var(--hairline); }
+  section:last-of-type { border-bottom: 0; }
+  .section-no { color: var(--muted); font-size: 12px; letter-spacing: .18em; margin-bottom: 20px; }
+  h2 {
+    font-size: clamp(22px, 2.8vw, 30px);
+    line-height: 1.2;
+    letter-spacing: -0.01em;
+    margin: 0 0 28px;
+    font-weight: 700;
+    max-width: 760px;
+  }
+  h2 .amber { color: var(--amber); }
+  p { color: var(--muted); max-width: 640px; }
+  p strong, p.bright { color: var(--ink); font-weight: 500; }
+
+  /* steps — borrows from the ledger language on / */
+  .steps {
+    border: 1px solid var(--hairline);
+    margin-top: 36px;
+    background: var(--surface);
+  }
+  .steps .row {
+    display: grid;
+    grid-template-columns: 110px 1fr;
+    gap: 20px;
+    padding: 20px 24px;
+    font-size: 14px;
+    border-bottom: 1px dashed var(--hairline);
+    align-items: baseline;
+  }
+  .steps .row:last-child { border-bottom: 0; }
+  .steps .row .k {
+    color: var(--amber);
+    letter-spacing: .14em;
+    font-size: 11px;
+    text-transform: uppercase;
+  }
+  .steps .row .v { color: var(--ink); line-height: 1.55; }
+  .steps .row .v span.m { color: var(--muted); }
+  @media (max-width: 560px) {
+    .steps .row { grid-template-columns: 1fr; gap: 6px; }
+  }
+
+  /* next moves — mirrors the components-grid structure on / */
+  .next {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 0;
+    margin-top: 36px; border: 1px solid var(--hairline);
+  }
+  .next .cell {
+    padding: 26px 28px;
+    border-right: 1px solid var(--hairline);
+    background: var(--surface);
+  }
+  .next .cell:nth-child(2n) { border-right: 0; }
+  .next .cell .c-no { font-size: 11px; letter-spacing: .18em; color: var(--amber); margin-bottom: 10px; }
+  .next .cell h3 { margin: 0 0 8px; font-size: 15px; font-weight: 700; color: var(--ink); }
+  .next .cell p { color: var(--muted); font-size: 13px; margin: 0 0 16px; line-height: 1.55; max-width: none; }
+  .next .cell a.lnk {
+    color: var(--amber); text-decoration: none; font-size: 13px;
+    border-bottom: 1px solid var(--hairline);
+    padding-bottom: 2px;
+  }
+  .next .cell a.lnk:hover { border-bottom-color: var(--amber); }
+  @media (max-width: 640px) {
+    .next { grid-template-columns: 1fr; }
+    .next .cell { border-right: 0; border-bottom: 1px solid var(--hairline); }
+    .next .cell:last-child { border-bottom: 0; }
+  }
+
+  /* fallback */
+  .fallback {
+    border: 1px dashed var(--hairline);
+    padding: 22px 24px;
+    margin-top: 32px;
+    background: transparent;
+  }
+  .fallback p { color: var(--muted); font-size: 13px; margin: 0; max-width: none; }
+  .fallback p strong { color: var(--ink); }
+  .fallback p a { color: var(--amber); }
+
+  footer {
+    padding: 32px 0 56px;
+    font-size: 12px;
+    color: var(--muted);
+    border-top: 1px solid var(--hairline);
+  }
+  footer .wrap { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 12px; }
+
+  @media (max-width: 720px) {
+    header.hero { padding: 56px 0 48px; }
+    section { padding: 56px 0; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .btn, .btn:hover { transition: none; transform: none; box-shadow: none; }
+    html { scroll-behavior: auto; }
+  }
+</style>
+</head>
+<body>
+
+<nav class="top" aria-label="Primary">
+  <div class="wrap">
+    <a class="brand" href="/">proofmeta/<span>protocol</span></a>
+    <div class="links">
+      <a href="/#how">how it works</a>
+      <a href="/#objections">questions</a>
+      <a href="/#proof">who's behind it</a>
+      <a href="/#spec">spec →</a>
+    </div>
+  </div>
+</nav>
+
+<header class="hero">
+  <div class="wrap">
+    <div class="prompt" aria-hidden="true">
+      <span class="cmd">$</span> curl -X POST /builder-thread --data email=you@domain.com<br>
+      <span class="out">→ 200 OK. awaiting double opt-in.</span>
+    </div>
+
+    <h1 class="display">You're on the thread. <span class="dim">Almost.</span></h1>
+
+    <p class="subhead">We sent a confirmation link to the email you just submitted. <strong>One click and you're in.</strong> The double opt-in is the only gate, and it's there to keep the list clean — nothing else.</p>
+
+    <div class="cta-row">
+      <a class="btn" href="https://github.com/bettabeta/proofmeta" target="_blank" rel="noopener">Read the spec →</a>
+      <a class="btn ghost" href="/">Back to proofmeta.com</a>
+    </div>
+  </div>
+</header>
+
+<section id="next">
+  <div class="wrap">
+    <div class="section-no">01 / WHAT HAPPENS NEXT</div>
+    <h2>Three steps. About <span class="amber">sixty seconds total.</span></h2>
+
+    <div class="steps" role="list">
+      <div class="row" role="listitem">
+        <span class="k">STEP 01</span>
+        <span class="v">Open the email from <strong>ProofMeta</strong>. Subject line starts with <em>Please confirm your subscription</em>. <span class="m">If it lands in spam, drag it to primary so future ones route correctly.</span></span>
+      </div>
+      <div class="row" role="listitem">
+        <span class="k">STEP 02</span>
+        <span class="v">Click the confirm link. That's the GDPR-required double opt-in. <span class="m">No form to fill out. No follow-up questions.</span></span>
+      </div>
+      <div class="row" role="listitem">
+        <span class="k">STEP 03</span>
+        <span class="v">Updates land when the spec moves, not on a newsletter schedule. <span class="m">Low volume. One click to leave. Nothing sold.</span></span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="meanwhile">
+  <div class="wrap">
+    <div class="section-no">02 / WHILE THE EMAIL LANDS</div>
+    <h2>Two things worth doing <span class="amber">in the next ten minutes.</span></h2>
+    <p>The spec is open. No waitlist, no sign-up wall — the builder thread is for updates, not for access. Everything below is already yours to pull.</p>
+
+    <div class="next">
+      <div class="cell">
+        <div class="c-no">MOVE 01</div>
+        <h3>Read the spec on GitHub</h3>
+        <p>Manifest schema, status lifecycle, and the current scope of the reference implementation. Apache 2.0. Versioned in public.</p>
+        <a class="lnk" href="https://github.com/bettabeta/proofmeta" target="_blank" rel="noopener">github.com/bettabeta/proofmeta →</a>
+      </div>
+      <div class="cell">
+        <div class="c-no">MOVE 02</div>
+        <h3>Wrap one skill</h3>
+        <p>Pick a reusable skill you've already shipped. Write a manifest. Usually ten minutes. The wrapper is the record — even if you price the skill at zero.</p>
+        <a class="lnk" href="/#how">See the example manifest →</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="inbox-fallback">
+  <div class="wrap">
+    <div class="section-no">03 / IF THE EMAIL DOESN'T ARRIVE</div>
+    <h2>Check spam first, then email direct.</h2>
+    <div class="fallback">
+      <p>Delivery is usually under a minute. If nothing has landed after five, the confirmation probably got filtered. Search your inbox for <strong>ProofMeta</strong>, then check the spam folder. Still nothing? Email <a href="mailto:daud@licenserocks.de">daud@licenserocks.de</a> direct — I'll add you manually and fix whatever routing broke.</p>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <span>Pandr UG · Solmsstraße 38, 10961 Berlin</span>
+    <span>Apache 2.0 · chain-agnostic · AI-first</span>
+  </div>
+</footer>
+
+</body>
+</html>
