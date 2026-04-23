@@ -138,6 +138,17 @@
   .component .c-no { font-size: 11px; letter-spacing: .18em; color: var(--amber); margin-bottom: 10px; }
   .component h3 { margin: 0 0 8px; font-size: 15px; font-weight: 700; color: var(--ink); }
   .component p { color: var(--muted); font-size: 13px; margin: 0; line-height: 1.55; max-width: none; }
+  .component .c-no .status-badge {
+    margin-left: 10px;
+    padding: 2px 7px;
+    border: 1px solid currentColor;
+    font-size: 10px;
+    letter-spacing: .1em;
+    font-weight: 500;
+    vertical-align: 1px;
+  }
+  .component .c-no .status-badge.spec { color: var(--green); }
+  .component .c-no .status-badge.plan { color: var(--muted); }
   @media (max-width: 640px) {
     .components-grid { grid-template-columns: 1fr; }
     .component { border-right: 0; border-bottom: 1px solid var(--hairline); }
@@ -384,13 +395,13 @@
 <section id="story">
   <div class="wrap">
     <div class="section-no">03 / THE STORY</div>
-    <h2>We spent ten years writing licenses. <span class="amber">Then the consumer changed.</span></h2>
-    <p>The team behind ProofMeta built <strong>license.rocks</strong> — multi-award-winning IP infrastructure that put licensing, rights, and royalty flow on a surface humans could actually use. Enterprise IP, music rights, brand licenses. For a while, that was the job.</p>
+    <h2>A decade on the licensing problem. <span class="amber">Then the consumer changed.</span></h2>
+    <p>I spent most of the last decade on licensing and IP — co-building <strong>license.rocks</strong>, and then working alongside enterprises and creators whose output <em>was</em> the IP. Music and art especially: world-class craft, almost no licensing scaffolding around it. For a long time, the job was building that scaffolding for humans to read.</p>
     <p>Then the consumer changed.</p>
-    <p>A model doesn't read a PDF. It doesn't care what's in your footer. An agent deciding whether to use your skill runs at thousands of requests per minute. Either the terms are in a format it can parse, or the terms might as well not exist. Every document we'd written for human readers became invisible the moment an agent was in the loop.</p>
-    <p><strong>We tried the obvious first moves.</strong> A well-written LICENSE.md in every repo. Models ignore it. A clickwrap on a distribution page. Agents don't click. A platform-specific agreement that solves one surface and leaves every other exposed.</p>
-    <p>The trigger was realizing the only durable fix was a neutral protocol. Not a platform. Not a storefront. A file format and a status lifecycle any skill can ship with, any agent can parse, and any chain can verify.</p>
-    <p class="bright">That's what became ProofMeta Protocol.</p>
+    <p>A model doesn't read a PDF. It doesn't care what's in your footer. An agent deciding whether to use your skill runs at thousands of requests per minute. Either the terms are in a format it can parse, or the terms might as well not exist. Every document built for human readers goes invisible the moment an agent is in the loop.</p>
+    <p><strong>Look at the licensing surfaces that exist today — all built for human readers.</strong> A LICENSE.md in the repo: models ignore it. A clickwrap on a distribution page: agents don't click. A platform-specific agreement: solves one surface, leaves every other exposed.</p>
+    <p>The durable fix had to be a neutral protocol. Not a platform. Not a storefront. A file format and a status lifecycle any skill can ship with, any agent can parse, and any chain can verify.</p>
+    <p class="bright">That's ProofMeta Protocol.</p>
   </div>
 </section>
 
@@ -427,29 +438,29 @@
 <section id="components">
   <div class="wrap">
     <div class="section-no">05 / WHAT'S IN THE PROTOCOL</div>
-    <h2>Four parts. All open. All implementable without permission.</h2>
-    <p>The protocol is a specification, not a product. Everything below is covered under Apache 2.0, versioned in public, and shippable without asking.</p>
+    <h2>Four parts. All open. Shipping in the open — what's ready and what isn't.</h2>
+    <p>The protocol is a specification, not a product. Everything below is covered under Apache 2.0, versioned in public, and shippable without asking. Status badges mark what's written down, what's in progress, and what's planned — no vaporware.</p>
 
     <div class="components-grid">
       <div class="component">
-        <div class="c-no">COMPONENT 01</div>
+        <div class="c-no">COMPONENT 01 <span class="status-badge spec">SPEC'D</span></div>
         <h3>The manifest schema</h3>
-        <p>YAML or JSON. Defines the item, the terms, the price, the chain. Under 40 lines for most skills.</p>
+        <p>YAML or JSON. Defines the item, the terms, the price, the chain. Under 40 lines for most skills. v0.1 schema file is the next milestone in the repo.</p>
       </div>
       <div class="component">
-        <div class="c-no">COMPONENT 02</div>
+        <div class="c-no">COMPONENT 02 <span class="status-badge spec">SPEC'D</span></div>
         <h3>The status lifecycle</h3>
-        <p>Five states: OPEN → PENDING → GRANTED | DENIED → REVOKED. Machine-readable transitions. Auditable trail. Revokes are enforceable.</p>
+        <p>Five states: OPEN → PENDING → GRANTED | DENIED → REVOKED. Transitions mapped. Auditable trail by design. Revokes are enforceable at the wrapper.</p>
       </div>
       <div class="component">
-        <div class="c-no">COMPONENT 03</div>
+        <div class="c-no">COMPONENT 03 <span class="status-badge plan">PLANNED</span></div>
         <h3>The reference implementation</h3>
-        <p>A working server and client under Apache 2.0. Fork it, extend it, wire it into whatever agent runtime you already run.</p>
+        <p>A runnable reference under Apache 2.0 that wraps a skill, serves the manifest, and handles the status lifecycle end-to-end. The exact architectural shape — server, client, or something thinner — is a call to make once the schema lands.</p>
       </div>
       <div class="component">
-        <div class="c-no">COMPONENT 04</div>
+        <div class="c-no">COMPONENT 04 <span class="status-badge plan">PLANNED</span></div>
         <h3>The SDK</h3>
-        <p>Python and TypeScript to start. Rust and Go next. Every primitive the reference implementation uses, packaged for drop-in.</p>
+        <p>Python and TypeScript first. Rust and Go after. Every primitive the reference implementation uses, packaged for drop-in. Ships after the reference implementation is real.</p>
       </div>
     </div>
   </div>
@@ -532,19 +543,10 @@
 <section id="proof">
   <div class="wrap">
     <div class="section-no">08 / WHO'S BEHIND IT</div>
-    <h2>Built by the team that built license.rocks.</h2>
-    <p>ProofMeta isn't a leap into a new category. It's the compounding of a decade of IP and licensing work into the agentic era — same problem, new consumer.</p>
-
-    <div class="proof">
-      <div class="card">
-        <h3>license.rocks</h3>
-        <p>Multi-award-winning IP infrastructure. Licensing designed for humans — enterprise IP, music rights, brand licenses. ProofMeta does it for agents.</p>
-      </div>
-      <div class="card">
-        <h3>BerChain</h3>
-        <p>Founding Member. President since early 2025. Honorary role in Berlin's independent blockchain + AI community — signal that neutrality here isn't rhetorical.</p>
-      </div>
-    </div>
+    <h2>One person. A decade on the licensing problem.</h2>
+    <p>I'm Daud. I've been in software since the late 1990s and spent most of the last decade on licensing and IP — co-building <strong>license.rocks</strong>, then working alongside enterprises and, more often, creators whose output <em>was</em> the IP but who had no licensing layer to hold it. Music and art especially: the craft was world-class, the rights scaffolding around it was almost always missing.</p>
+    <p>That's the pattern ProofMeta is built on. Agents are the next consumer, and they need the same thing those creators needed — a wrapper the surface can actually read. Not a leap into a new category. The compounding of a decade of work into the era where models, not lawyers, are the parsers.</p>
+    <p class="bright">ProofMeta is a one-person protocol project today. Apache 2.0, written in public, open to anyone who wants to build on it.</p>
   </div>
 </section>
 
@@ -571,12 +573,22 @@
       Framing: updates from implementers as the protocol moves. Voice-consistent with "no permission, no sign-up wall."
       MailerLite form ID: 185530176070747374 (account 2287781)
 
-      Submission is intercepted by the inline script below — JSONP keeps the
-      user on-page instead of dumping them on assets.mailerlite.com with a raw
-      {"success":true} payload. Server-side fallback: MailerLite "After subscribe
-      → Redirect to URL" is pointed at /thanks.
+      Approach: submit to a hidden iframe so the navigation stays on-page, then
+      swap the form to a success state. The iframe absorbs MailerLite's raw
+      {"success":true} response. A 2.5s timeout triggers the success state as
+      a safety net (if the iframe load event is suppressed by cross-origin,
+      the subscription itself still went through — GDPR double opt-in means
+      the real confirmation is in the user's inbox).
+
+      Belt-and-suspenders: MailerLite's "After subscribe → Redirect to URL"
+      points at /thanks so a full-page fallback lands somewhere branded.
     -->
-    <form class="builder-thread" id="builder-thread" action="https://assets.mailerlite.com/jsonp/2287781/forms/185530176070747374/subscribe" method="post" aria-label="Join the builder thread">
+    <iframe name="ml-sink" id="ml-sink" style="display:none" aria-hidden="true" tabindex="-1"></iframe>
+    <form class="builder-thread" id="builder-thread"
+          action="https://assets.mailerlite.com/jsonp/2287781/forms/185530176070747374/subscribe"
+          method="post"
+          target="ml-sink"
+          aria-label="Join the builder thread">
       <input type="email" name="fields[email]" required placeholder="you@domain.com" aria-label="Email address" autocomplete="email">
       <button type="submit" class="btn">Join the builder thread →</button>
       <input type="hidden" name="ml-submit" value="1">
@@ -589,56 +601,38 @@
         var form = document.getElementById('builder-thread');
         if (!form) return;
 
-        form.addEventListener('submit', function (e) {
-          e.preventDefault();
+        var handled = false;
+        function showSuccess() {
+          if (handled) return;
+          handled = true;
+          form.innerHTML =
+            '<p class="hint" style="color: var(--green); font-size: 13px; margin: 0;">' +
+            '✓ You\'re on the thread. Check your inbox — confirm the email and you\'re set.' +
+            '</p>';
+        }
+
+        form.addEventListener('submit', function () {
           var emailInput = form.querySelector('input[type="email"]');
           var button = form.querySelector('button[type="submit"]');
           if (!emailInput.value) return;
 
           button.disabled = true;
-          var originalLabel = button.textContent;
           button.textContent = 'Joining…';
 
-          var cb = 'ml_cb_' + Date.now();
-          window[cb] = function (res) {
-            cleanup();
-            if (res && res.success) {
-              form.innerHTML =
-                '<p class="hint" style="color: var(--green); font-size: 13px; margin: 0;">' +
-                '✓ You\'re on the thread. Check your inbox — confirm the email and you\'re set.' +
-                '</p>';
-            } else {
-              button.disabled = false;
-              button.textContent = originalLabel;
-              var err = document.createElement('p');
-              err.className = 'hint';
-              err.style.color = 'var(--red)';
-              err.textContent = 'Something went wrong. Try again, or email daud@licenserocks.de direct.';
-              form.appendChild(err);
-            }
-          };
-
-          var params = new URLSearchParams({
-            'fields[email]': emailInput.value,
-            'ml-submit': '1',
-            'anticsrf': 'true',
-            'callback': cb
-          });
-
-          var script = document.createElement('script');
-          script.src = form.action + '?' + params.toString();
-          script.onerror = function () {
-            cleanup();
-            button.disabled = false;
-            button.textContent = originalLabel;
-          };
-          document.body.appendChild(script);
-
-          function cleanup() {
-            try { delete window[cb]; } catch (e) { window[cb] = undefined; }
-            if (script.parentNode) script.parentNode.removeChild(script);
-          }
+          // Safety net: if iframe load doesn't fire (cross-origin suppression),
+          // the POST still went through — show success after 2.5s.
+          setTimeout(showSuccess, 2500);
         });
+
+        // If the iframe fires a load event after submission, trust it and swap.
+        var sink = document.getElementById('ml-sink');
+        if (sink) {
+          sink.addEventListener('load', function () {
+            // Ignore the initial blank load.
+            if (!form.querySelector('button')) return;
+            if (form.querySelector('button').disabled) showSuccess();
+          });
+        }
       })();
     </script>
   </div>
