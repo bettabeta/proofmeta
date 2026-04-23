@@ -18,9 +18,11 @@ export {
 export { generateKeyPair, keyPairFromPrivate, type KeyPair } from "./keys.js";
 export {
   createEnvelope,
+  updateStatus,
   verifyEnvelope,
   verifyChain,
   type CreateEnvelopeOptions,
+  type StatusUpdateExtras,
   type VerifyOptions,
   type VerifyResult,
 } from "./envelope.js";

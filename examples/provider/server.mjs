@@ -22,8 +22,8 @@ import http from "node:http";
 import {
   generateKeyPair,
   createEnvelope,
+  updateStatus,
   verifyEnvelope,
-  hashPayload,
 } from "@proofmeta/sdk-ts";
 import { createFreeResolver } from "@proofmeta/resolver-free";
 
@@ -153,37 +153,17 @@ async function handleRequest(req, res) {
     return json(res, 409, { error: "request_id already seen" });
   }
 
-  const openHash = hashPayload(body.payload);
-  // Sanity: verifyEnvelope already ensured body.payload_hash === openHash.
-  const chain = [body];
-
-  // 4. Sign PENDING.
-  const pending = await createEnvelope({
-    payload: {
-      type: "status.update",
-      request_id: p.request_id,
-      status: "PENDING",
-      note: "payment resolver starting",
-    },
-    author: keypair.did,
-    privateKey: keypair.privateKey,
-    in_reply_to: openHash,
+  // 4. Sign PENDING — updateStatus wires in_reply_to + request_id from the prior envelope.
+  const pending = await updateStatus(body, "PENDING", keypair.did, keypair.privateKey, {
+    note: "payment resolver starting",
   });
-  chain.push(pending);
+  const chain = [body, pending];
 
   // 5. Invoke the free resolver.
   const resolverResult = await freeResolver.process({ request: p, licenseType: lt });
   if (!resolverResult.ok) {
-    const denied = await createEnvelope({
-      payload: {
-        type: "status.update",
-        request_id: p.request_id,
-        status: "DENIED",
-        note: resolverResult.reason,
-      },
-      author: keypair.did,
-      privateKey: keypair.privateKey,
-      in_reply_to: pending.payload_hash,
+    const denied = await updateStatus(pending, "DENIED", keypair.did, keypair.privateKey, {
+      note: resolverResult.reason,
     });
     chain.push(denied);
     chains.set(p.request_id, chain);
@@ -191,21 +171,13 @@ async function handleRequest(req, res) {
   }
 
   // 6. Sign GRANTED.
-  const granted = await createEnvelope({
-    payload: {
-      type: "status.update",
-      request_id: p.request_id,
-      status: "GRANTED",
-      note: "free license — payment skipped",
-      delivery: {
-        method: "https",
-        url: `${PUBLIC_ORIGIN}/deliver/${p.request_id}`,
-      },
-      resolver_receipt: resolverResult.receipt,
+  const granted = await updateStatus(pending, "GRANTED", keypair.did, keypair.privateKey, {
+    note: "free license — payment skipped",
+    delivery: {
+      method: "https",
+      url: `${PUBLIC_ORIGIN}/deliver/${p.request_id}`,
     },
-    author: keypair.did,
-    privateKey: keypair.privateKey,
-    in_reply_to: pending.payload_hash,
+    resolver_receipt: resolverResult.receipt,
   });
   chain.push(granted);
   chains.set(p.request_id, chain);

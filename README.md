@@ -83,15 +83,19 @@ package.json            → npm workspaces (packages/*, examples/*)
 .cursorrules            → Cursor IDE rules
 ```
 
-## v1 Scope
+## What v1 ships
 
-- [x] Manifest spec
-- [ ] Request/Response spec
-- [ ] Status lifecycle state machine
-- [ ] TypeScript SDK
-- [ ] Reference Resolver (free/open license)
-- [ ] Demo Provider + Consumer agents
-- [ ] Validator CLI (`proofmeta validate manifest.json`)
+v1 is a working vertical slice, not a wishlist. A Provider can stand up, a Consumer can request a license, and an envelope chain can be re-verified by anyone end-to-end — no platform, no chain, no coordination beyond the manifest URL.
+
+- [x] Manifest spec (`payload.manifest.schema.json`)
+- [x] License-request + status-update spec (`payload.license-request.schema.json`, `payload.status-update.schema.json`)
+- [x] Status lifecycle: `OPEN → PENDING → GRANTED | DENIED → REVOKED`
+- [x] TypeScript SDK (`@proofmeta/sdk-ts`) — ed25519 signing, JCS hashing, envelope + chain verification
+- [x] Reference resolver interface + free-license implementation (`@proofmeta/resolvers`)
+- [x] Demo Provider and Consumer agents (`examples/provider`, `examples/consumer`)
+- [x] Validator CLI (`@proofmeta/cli` → `proofmeta validate <file>`)
+
+Next up (post-v1): content-hashing for catalog items, optional anchor resolvers (Tier 3), and a normative test-vector corpus.
 
 ## License
 

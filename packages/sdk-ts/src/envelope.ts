@@ -25,7 +25,9 @@ import {
   type Ed25519SigRef,
   type Envelope,
   type PayloadBase,
+  type ProofMetaStatus,
   type Sha256Ref,
+  type StatusUpdatePayload,
 } from "./types.js";
 
 // ── Signing ──────────────────────────────────────────────────────────────
@@ -154,6 +156,51 @@ export async function verifyEnvelope<P extends PayloadBase>(
   const msg = new TextEncoder().encode(envelope.payload_hash);
   const ok = await ed25519.verifyAsync(sigBytes, msg, publicKey);
   return ok ? { ok: true } : { ok: false, reason: "invalid ed25519 signature" };
+}
+
+// ── Status transitions ───────────────────────────────────────────────────
+
+/**
+ * Extras attached to a status.update payload. `note` and `delivery` are the
+ * two named fields in the spec; additional keys pass through untouched, for
+ * resolver-specific metadata (e.g. payment receipts).
+ */
+export interface StatusUpdateExtras {
+  note?: string;
+  delivery?: StatusUpdatePayload["delivery"];
+  [k: string]: unknown;
+}
+
+/**
+ * Build and sign a status.update envelope that continues an existing chain.
+ *
+ * Given the `prior` envelope (typically the OPEN request, or a PENDING
+ * update), this produces the next envelope with the correct `in_reply_to`
+ * pointing at `prior.payload_hash` and the same `request_id`. The Provider's
+ * job is reduced to: pick the next status, hand over its key, done.
+ *
+ * The generic parameter `B` ensures the prior payload carries `request_id`;
+ * manifest payloads do not qualify at compile time.
+ */
+export async function updateStatus<B extends PayloadBase & { request_id: string }>(
+  prior: Envelope<B>,
+  status: Exclude<ProofMetaStatus, "OPEN">,
+  author: Did,
+  privateKey: Uint8Array,
+  extras: StatusUpdateExtras = {},
+): Promise<Envelope<StatusUpdatePayload>> {
+  const payload: StatusUpdatePayload = {
+    type: "status.update",
+    request_id: prior.payload.request_id,
+    status,
+    ...extras,
+  };
+  return createEnvelope<StatusUpdatePayload>({
+    payload,
+    author,
+    privateKey,
+    in_reply_to: prior.payload_hash,
+  });
 }
 
 // ── Chain verification ───────────────────────────────────────────────────
