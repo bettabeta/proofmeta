@@ -1,4 +1,8 @@
-# ProofMeta Protocol
+# ProofMeta Primitive Core
+
+> **Layer:** Primitive
+> **Depends on:** nothing
+> **Guarantees:** Cryptographic integrity — Signed Envelopes, DID identity, JCS hashing, ed25519 signatures, status lifecycle.
 
 > The permission layer for the agentic web — an open protocol that lets any AI agent discover, request, and use licensed items from any other AI agent, with machine-readable terms and a status lifecycle.
 
