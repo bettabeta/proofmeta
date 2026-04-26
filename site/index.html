@@ -5,7 +5,8 @@
   ProofMeta Protocol — homepage (v1)
 
   All placeholders filled — page is ready to push.
-  - GitHub repo:       https://github.com/bettabeta/proofmeta
+  - GitHub repos:      https://github.com/bettabeta/proofmeta-primitive-core
+  -                    https://github.com/bettabeta/proofmeta-license-contracts
   - MailerLite form:   account 2287781 / form 185530176070747374
 
   I18N STRATEGY (deferred):
@@ -334,7 +335,7 @@
     <p class="subhead"><strong>ProofMeta is an open licensing protocol for agent-consumable work.</strong> Machine-readable terms. Chain-agnostic. Apache 2.0. You ship the skill. The wrapper does the negotiating.</p>
 
     <div class="cta-row">
-      <a class="btn" href="https://github.com/bettabeta/proofmeta" target="_blank" rel="noopener">Read the spec →</a>
+      <a class="btn" href="https://github.com/bettabeta/proofmeta-primitive-core" target="_blank" rel="noopener">Read the spec →</a>
       <a class="btn ghost" href="#how">See how it works</a>
     </div>
 
@@ -411,14 +412,14 @@
     <h2>A manifest. A request. A grant.</h2>
     <p>ProofMeta wraps a skill in a machine-readable license. Agents discover it, request access, get a decision, and act inside the terms you set. The wrapper is the surface. The skill stays yours.</p>
 
-<pre class="code" aria-label="Example manifest"><span class="c"># proofmeta.manifest.yaml</span>
-<span class="k">item:</span>     prompt-chain-kit
-<span class="k">license:</span>
-  <span class="k">type:</span>     <span class="s">commercial-use</span>
-  <span class="k">price:</span>    <span class="s">"€0.02 / call"</span>
-  <span class="k">duration:</span> <span class="s">30d</span>
-  <span class="k">chain:</span>    <span class="s">any</span>
-<span class="k">status:</span>   <span class="s">OPEN</span></pre>
+<pre class="code" aria-label="Example license"><span class="c">// A license is four things. That's it.</span>
+{
+  <span class="k">"id"</span>:         <span class="s">"commercial-standard"</span>,
+  <span class="k">"scope"</span>:      [<span class="s">"commercial"</span>, <span class="s">"derivative-allowed"</span>, <span class="s">"ai-training-excluded"</span>],
+  <span class="k">"terms_url"</span>:  <span class="s">"https://youragent.ai/terms/commercial"</span>,
+  <span class="k">"terms_hash"</span>: <span class="s">"sha256:a1b2c3..."</span>,
+  <span class="k">"pricing"</span>:    { <span class="k">"model"</span>: <span class="s">"one-time"</span>, <span class="k">"amount"</span>: <span class="s">"5.00"</span>, <span class="k">"currency"</span>: <span class="s">"USD"</span> }
+}</pre>
 
     <div class="lifecycle" aria-label="License lifecycle states">
       <span class="state s-open">OPEN</span>
@@ -438,29 +439,29 @@
 <section id="components">
   <div class="wrap">
     <div class="section-no">05 / WHAT'S IN THE PROTOCOL</div>
-    <h2>Four parts. All open. Shipping in the open — what's ready and what isn't.</h2>
-    <p>The protocol is a specification, not a product. Everything below is covered under Apache 2.0, versioned in public, and shippable without asking. Status badges mark what's written down, what's in progress, and what's planned — no vaporware.</p>
+    <h2>Three layers. All open. Built to stack, not to lock.</h2>
+    <p>The protocol is a specification, not a product. Everything below is covered under Apache 2.0, versioned in public, and shippable without asking. Lower layers never depend on higher ones — swap your payment rail without touching the license logic.</p>
 
     <div class="components-grid">
       <div class="component">
-        <div class="c-no">COMPONENT 01 <span class="status-badge spec">SPEC'D</span></div>
-        <h3>The manifest schema</h3>
-        <p>YAML or JSON. Defines the item, the terms, the price, the chain. Under 40 lines for most skills. v0.1 schema file is the next milestone in the repo.</p>
+        <div class="c-no">LAYER 01 <span class="status-badge spec">SHIPPED</span></div>
+        <h3>Primitive Core</h3>
+        <p>Signed Envelopes, DID identity, ed25519 signatures, JCS hashing, status lifecycle. The cryptographic foundation. TypeScript SDK + CLI validator published on npm.</p>
       </div>
       <div class="component">
-        <div class="c-no">COMPONENT 02 <span class="status-badge spec">SPEC'D</span></div>
-        <h3>The status lifecycle</h3>
-        <p>Five states: OPEN → PENDING → GRANTED | DENIED → REVOKED. Transitions mapped. Auditable trail by design. Revokes are enforceable at the wrapper.</p>
+        <div class="c-no">LAYER 02 <span class="status-badge spec">SHIPPED</span></div>
+        <h3>License Contracts</h3>
+        <p>Chain-agnostic license semantics. Scope tags, pricing models (free, one-time, subscription, usage-based), and ready-made templates you can copy-paste. One JSON object per license.</p>
       </div>
       <div class="component">
-        <div class="c-no">COMPONENT 03 <span class="status-badge plan">PLANNED</span></div>
-        <h3>The reference implementation</h3>
-        <p>A runnable reference under Apache 2.0 that wraps a skill, serves the manifest, and handles the status lifecycle end-to-end. The exact architectural shape — server, client, or something thinner — is a call to make once the schema lands.</p>
+        <div class="c-no">LAYER 03 <span class="status-badge plan">NEXT</span></div>
+        <h3>Execution Layer</h3>
+        <p>Chain-specific resolvers for payment (Stripe, x402, Lightning), delivery (HTTPS, IPFS), and anchoring (Solana PDA, EVM). Pluggable — pick your stack, the protocol doesn't care.</p>
       </div>
       <div class="component">
-        <div class="c-no">COMPONENT 04 <span class="status-badge plan">PLANNED</span></div>
-        <h3>The SDK</h3>
-        <p>Python and TypeScript first. Rust and Go after. Every primitive the reference implementation uses, packaged for drop-in. Ships after the reference implementation is real.</p>
+        <div class="c-no">LAYER 04 <span class="status-badge spec">SHIPPED</span></div>
+        <h3>SDK + CLI</h3>
+        <p>TypeScript SDK: create envelopes, sign, verify, chain. CLI: validate any ProofMeta artifact from your terminal. <code>npm i @proofmeta/sdk-ts</code> — drop-in, zero config.</p>
       </div>
     </div>
   </div>
@@ -557,15 +558,19 @@
     <p>The spec is Apache 2.0 and open for implementation. No waitlist. No permission. No sign-up wall.</p>
 
 <pre class="code"><span class="c"># 1. read the spec</span>
-<span class="k">$</span> git clone <span class="s">https://github.com/bettabeta/proofmeta</span>
+<span class="k">$</span> git clone <span class="s">https://github.com/bettabeta/proofmeta-primitive-core</span>
 
-<span class="c"># 2. install the reference SDK + run the end-to-end demo</span>
-<span class="k">$</span> cd proofmeta <span class="s">&&</span> npm install <span class="s">&&</span> npm run e2e
+<span class="c"># 2. install the SDK + run the end-to-end demo</span>
+<span class="k">$</span> cd proofmeta-primitive-core <span class="s">&&</span> npm install <span class="s">&&</span> npm run e2e
 
-<span class="c"># 3. wrap your own skill — see examples/provider for a 20-line starting point</span></pre>
+<span class="c"># 3. browse the license templates</span>
+<span class="k">$</span> git clone <span class="s">https://github.com/bettabeta/proofmeta-license-contracts</span>
+
+<span class="c"># 4. wrap your own skill — see examples/provider for a 20-line starting point</span></pre>
 
     <div class="cta-row">
-      <a class="btn" href="https://github.com/bettabeta/proofmeta" target="_blank" rel="noopener">Read the spec →</a>
+      <a class="btn" href="https://github.com/bettabeta/proofmeta-primitive-core" target="_blank" rel="noopener">Primitive Core →</a>
+      <a class="btn ghost" href="https://github.com/bettabeta/proofmeta-license-contracts" target="_blank" rel="noopener">License Contracts →</a>
     </div>
 
     <!--
