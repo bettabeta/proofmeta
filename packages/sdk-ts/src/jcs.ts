@@ -21,47 +21,45 @@
  * Reference: https://www.rfc-editor.org/rfc/rfc8785
  */
 
+import { snapshotJsonValue, type JsonValue } from './json-ingress.js';
+
 export function jcs(value: unknown): string {
-  return canonicalize(value);
+  return canonicalize(snapshotJsonValue(value));
 }
 
-function canonicalize(value: unknown): string {
-  if (value === null) return "null";
-  if (value === undefined) {
-    throw new Error("JCS: cannot serialize undefined");
-  }
-  if (typeof value === "boolean") return value ? "true" : "false";
-  if (typeof value === "number") {
-    if (!Number.isFinite(value)) {
-      throw new Error(`JCS: cannot serialize non-finite number: ${value}`);
+function canonicalize(value: JsonValue): string {
+  type Frame = { kind: 'value'; value: JsonValue } |
+    { kind: 'array'; value: JsonValue[]; index: number } |
+    { kind: 'object'; value: { [key: string]: JsonValue }; keys: string[]; index: number };
+  const frames: Frame[] = [{ kind: 'value', value }];
+  const parts: string[] = [];
+  // Emit tokens in traversal order, joining once rather than repeatedly
+  // rebuilding ancestor strings. JSON.stringify sees only validated scalars.
+  while (frames.length) {
+    const frame = frames[frames.length - 1];
+    if (frame.kind === 'value') {
+      frames.pop();
+      const v = frame.value;
+      if (v === null || typeof v !== 'object') { parts.push(JSON.stringify(v)); continue; }
+      if (Array.isArray(v)) {
+        parts.push('['); frames.push({ kind: 'array', value: v, index: 0 });
+      } else {
+        parts.push('{'); frames.push({ kind: 'object', value: v, keys: Object.keys(v).sort(), index: 0 });
+      }
+      continue;
     }
-    // JSON.stringify uses ES Number#toString, which RFC 8785 mandates.
-    return JSON.stringify(value);
-  }
-  if (typeof value === "bigint") {
-    throw new Error("JCS: BigInt is not JSON-representable");
-  }
-  if (typeof value === "string") {
-    return JSON.stringify(value);
-  }
-  if (typeof value === "function" || typeof value === "symbol") {
-    throw new Error(`JCS: cannot serialize ${typeof value}`);
-  }
-  if (Array.isArray(value)) {
-    const parts = value.map((v) => canonicalize(v));
-    return "[" + parts.join(",") + "]";
-  }
-  if (typeof value === "object") {
-    // Plain-object sorted-keys canonical form.
-    const obj = value as Record<string, unknown>;
-    const keys = Object.keys(obj).sort(); // default sort = UTF-16 code-unit order
-    const parts: string[] = [];
-    for (const k of keys) {
-      const v = obj[k];
-      if (v === undefined) continue; // JSON-compatible behaviour: drop undefined props
-      parts.push(JSON.stringify(k) + ":" + canonicalize(v));
+    const length = frame.kind === 'array' ? frame.value.length : frame.keys.length;
+    if (frame.index === length) {
+      parts.push(frame.kind === 'array' ? ']' : '}'); frames.pop(); continue;
     }
-    return "{" + parts.join(",") + "}";
+    if (frame.index) parts.push(',');
+    const index = frame.index++;
+    if (frame.kind === 'array') frames.push({ kind: 'value', value: frame.value[index] });
+    else {
+      const key = frame.keys[index];
+      parts.push(JSON.stringify(key), ':');
+      frames.push({ kind: 'value', value: frame.value[key] });
+    }
   }
-  throw new Error(`JCS: unsupported value type: ${typeof value}`);
+  return parts.join('');
 }

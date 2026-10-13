@@ -18,7 +18,9 @@
     "payload.manifest.schema.json",
     "payload.license-request.schema.json",
     "payload.status-update.schema.json",
-    "README.md"
+    "README.md",
+    "LICENSE",
+    "NOTICE"
   ],
   "keywords": [
     "proofmeta",

@@ -24,8 +24,8 @@ import {
   generateKeyPair,
   createEnvelope,
   updateStatus,
-  verifyEnvelope,
 } from "@proofmeta/sdk-ts";
+import { acceptProtocolInput } from "@proofmeta/sdk-ts/acceptance";
 import { createFreeResolver } from "@proofmeta/resolver-free";
 
 // ── Config ────────────────────────────────────────────────────────────────
@@ -132,17 +132,18 @@ server.listen(PORT, HOST);
 // ── Handlers ─────────────────────────────────────────────────────────────
 
 async function handleRequest(req, res) {
-  const body = await readJson(req);
-  if (!body) return json(res, 400, { error: "empty body" });
-
-  // 1. Verify the OPEN envelope cryptographically.
-  const v = await verifyEnvelope(body);
-  if (!v.ok) return json(res, 400, { error: `invalid envelope: ${v.reason}` });
-
-  const p = body.payload;
-  if (p?.type !== "license.request" || p?.status !== "OPEN") {
-    return json(res, 400, { error: "payload.type/status not license.request/OPEN" });
+  // 1. Preserve HTTP bytes and accept a root OPEN for this Provider. Use the
+  // detached SDK snapshot for every later check and processing step.
+  const bytes = await readBytes(req);
+  const report = await acceptProtocolInput({ kind: "bytes", bytes }, {
+    operation: "provider-open", purpose: "protocol-conformance",
+    expectedProvider: keypair.did,
+  });
+  if (!report.accepted) {
+    return json(res, 400, { error: "invalid protocol input", code: report.errors[0].code });
   }
+  const body = report.snapshot;
+  const p = body.payload;
 
   // 2. Business-level validation.
   if (p.provider_id !== keypair.did) {
@@ -152,14 +153,14 @@ async function handleRequest(req, res) {
     return json(res, 400, { error: "consumer.id must match envelope.author" });
   }
   const lt = licenseTypesById.get(p.license_type);
-  if (!lt) return json(res, 400, { error: `unknown license_type: ${p.license_type}` });
+  if (!lt) return json(res, 400, { error: "unknown license_type", code: "LICENSE_TYPE_UNKNOWN" });
   if (p.terms_hash !== lt.terms_hash) {
-    return json(res, 400, { error: "terms_hash mismatch" });
+    return json(res, 400, { error: "terms_hash mismatch", code: "TERMS_MISMATCH" });
   }
   const item = inlineItems.find((i) => i.item_id === p.item_id);
-  if (!item) return json(res, 400, { error: `unknown item_id: ${p.item_id}` });
+  if (!item) return json(res, 400, { error: "unknown item_id", code: "ITEM_UNKNOWN" });
   if (!item.available_licenses.includes(p.license_type)) {
-    return json(res, 400, { error: "item does not offer this license_type" });
+    return json(res, 400, { error: "item does not offer this license_type", code: "LICENSE_UNAVAILABLE" });
   }
 
   // 3. Check and reserve synchronously after validation, before processing awaits.
@@ -218,18 +219,11 @@ function json(res, status, body) {
   res.end(payload);
 }
 
-function readJson(req) {
+function readBytes(req) {
   return new Promise((resolve, reject) => {
     const chunks = [];
     req.on("data", (c) => chunks.push(c));
-    req.on("end", () => {
-      if (chunks.length === 0) return resolve(null);
-      try {
-        resolve(JSON.parse(Buffer.concat(chunks).toString("utf-8")));
-      } catch (e) {
-        reject(new Error("invalid JSON body"));
-      }
-    });
+    req.on("end", () => resolve(Buffer.concat(chunks)));
     req.on("error", reject);
   });
 }

@@ -15,7 +15,7 @@
  *   • Surrogate pairs (astral-plane characters)
  *   • Nested structures and arrays (arrays preserve order; objects sort keys)
  *   • Empty object and empty array
- *   • `undefined` property dropping (JSON-compatible behaviour)
+ *   • Strict JSON-domain rejection (including undefined properties)
  *   • Error cases: NaN / Infinity / BigInt / function / symbol / top-level undefined
  */
 
@@ -124,8 +124,25 @@ test("empty object and empty array", () => {
 
 // ── Undefined handling ────────────────────────────────────────────────────
 
-test("undefined property values are dropped (JSON-compatible)", () => {
-  assert.equal(jcs({ a: 1, b: undefined, c: 3 }), '{"a":1,"c":3}');
+test("undefined property values reject rather than disappear", () => {
+  assert.throws(() => jcs({ a: 1, b: undefined, c: 3 }), /undefined/);
+});
+
+test("lone surrogates in values and keys reject", () => {
+  for (const s of ['\ud800', '\udfff']) {
+    assert.throws(() => jcs(s));
+    assert.throws(() => jcs({ [s]: 1 }));
+  }
+});
+
+test("sparse arrays reject", () => {
+  assert.throws(() => jcs(new Array(2)));
+});
+
+test("accessors reject without execution", () => {
+  let calls = 0;
+  assert.throws(() => jcs({ get a() { calls++; return 1; } }));
+  assert.equal(calls, 0);
 });
 
 test("top-level undefined throws", () => {

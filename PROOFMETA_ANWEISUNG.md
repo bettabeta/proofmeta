@@ -2,7 +2,7 @@
 
 > **What this document is:** The single source of truth for every AI agent, human developer, and tool (Claude Projects, Cursor, OpenClaw, etc.) working on ProofMeta. If it's not in this document, it's not decided yet.
 
-> **Last updated:** 2026-09-04 (D1–D7 locked 2026-04-16; D8–D11 + cleanup applied 2026-04-21; D12–D13 locked 2026-04-23; D14 accepted and merged 2026-06-21; D15 locked 2026-09-01; D16–D19 locked 2026-09-04)
+> **Last updated:** 2026-10-03 (D1–D7 locked 2026-04-16; D8–D11 + cleanup applied 2026-04-21; D12–D13 locked 2026-04-23; D14 accepted and merged 2026-06-21; D15 locked 2026-09-01; D16–D19 locked 2026-09-04; approved B1 clarification and package-version reconciliation drafted locally 2026-10-03, independent review pending)
 
 ---
 
@@ -77,6 +77,8 @@ These are non-negotiable. Every design decision must pass through these filters:
 | `in_reply_to` | ⚠️ context | Signed `payload_hash` of the logically previous envelope in the same lifecycle. Required for status updates and reviews. Omitted from roots and from their signing projections. |
 | `anchors` | ❌ | Optional, independently verified external evidence (see §3.5). Outside the author's signing projection; MAY be omitted and, when present, MUST be a non-empty array of valid anchor entries. |
 
+**B1 clarification — envelope UTC timestamp.** The envelope `timestamp` MUST satisfy the existing schema `date-time` validation and use `Z`, `z`, or `+00:00` as its UTC suffix. `-00:00` (unknown offset) and nonzero offsets MUST be rejected. Fractional seconds are permitted; neither uppercase `Z` only nor a fixed millisecond precision is required. Other date-time syntax and leap-second handling remain governed by the existing date-time validation, not a new `Date.parse` interpretation. Preserve the signed string; do not normalize it before hashing or signature verification. This suffix rule applies only to the envelope `timestamp`, not automatically to `valid_until` or other timestamp fields. It asserts no trusted time, TTL, or time monotonicity.
+
 #### 3.1.1 Canonical Serialization (JCS / RFC 8785)
 
 Two implementations computing `payload_hash` on the same payload **must** arrive at the same hash. Without a canonical form, `{"a":1,"b":2}` and `{"b":2,"a":1}` would hash differently — and the whole verification chain breaks.
@@ -89,6 +91,8 @@ ProofMeta uses **JCS (JSON Canonicalization Scheme, [RFC 8785](https://www.rfc-e
 - Numbers serialized per ECMAScript `Number.prototype.toString` rules (deterministic)
 - UTF-8 output, no BOM
 - Strings escaped per RFC 8259 with canonical escape sequences
+
+**B1 clarification — transport BOM.** ProofMeta raw JSON ingress for network messages and CLI protocol files MUST reject a leading UTF-8 BOM (`EF BB BF`) before decoding can hide it. Report an unsupported transport input, not a signature failure. This selects rejection rather than the parser permission to ignore a BOM in RFC 8259; it does not redefine that RFC. U+FEFF inside a JSON string remains valid string data. No BOM stripping or automatic transcoding is permitted. This transport rule does not change JCS output, the signing projection, or JSON Schema; an already parsed value cannot establish whether its original transport had a BOM.
 
 **The hashing procedure:**
 
@@ -140,7 +144,7 @@ The encoded signature body is exactly 64 raw Ed25519 signature bytes represented
 - `signature`, `payload`, and `anchors` are not members of the signing projection. The outer envelope has no whole-object canonicalization requirement.
 - A verifier MUST reconstruct exactly this projection from the received envelope and MUST fail closed if its signature does not verify.
 
-**Compatibility boundary.** This projection replaces the draft 0.2.x rule that signed only the `payload_hash` string. It is an intentionally **breaking pre-v1 draft change**, targeted for all ProofMeta packages at **0.3.0** while the protocol remains labeled **v1 draft**. A 0.3.0 verifier MUST NOT silently retry legacy payload-hash-only verification or report a legacy-only envelope as valid. Any explicitly offered migration or legacy-inspection tool MUST produce a distinct, non-valid result and MUST NOT participate in v1 lifecycle acceptance.
+**Compatibility boundary.** This projection replaces the draft 0.2.x rule that signed only the `payload_hash` string. The original intentionally **breaking pre-v1 draft change** targeted package line **0.3.0**. The approved B1 acceptance hardening targets SDK and CLI **0.5.0** under the version matrix in `docs/MILESTONE-SCOPE-FREEZE.md`; unchanged packages are not mechanically bumped. These remain **v1 draft** package versions, not wire versions or a protocol-v1 release. A verifier on the D16 projection path, including the B1 line, MUST NOT silently retry legacy payload-hash-only verification or report a legacy-only envelope as valid. Any explicitly offered migration or legacy-inspection tool MUST produce a distinct, non-valid result and MUST NOT participate in v1 lifecycle acceptance. B1 leaves wire `proofmeta: "1.0"`, schema IDs, and the signing projection unchanged.
 
 **Why not sorted-keys-JSON or CBOR?**
 - Sorted-keys-JSON has no spec and many subtle ambiguities (number formatting, unicode escapes, duplicate keys). Every ad-hoc implementation disagrees in edge cases.
@@ -280,6 +284,10 @@ Inspired by:
 - **`scope` has a normative core vocabulary + URL extensions.** Agents filter reliably on the core tags; jurisdiction- or provider-specific licenses extend via URL-typed tags without polluting the protocol.
 - `terms_hash` — the license text is hashed so agents can verify it hasn't changed since they agreed.
 - `price_hint` (when present) is a *hint*, not a binding price. Actual price is confirmed during the request flow.
+
+**B1 clarification — Manifest scope URL extensions.** For `license_types[].scope`, an entry outside the eight existing core tags MUST parse as an absolute URL under the WHATWG URL parser with no base URL. Reject leading or trailing whitespace and control characters anywhere in the input rather than accepting parser trimming or control-character removal. Keep the original string; do not require equality with a reserialized URL or normalize before signing. There is no HTTPS-only rule, universal host requirement, fetch, or reachability check; syntactically valid absolute `http:`, `https:`, `urn:`, `mailto:`, and other schemes are not rejected merely for their scheme. The existing core-tag minimum and the two existing conflict pairs remain unchanged; the B1 validator default follows the existing SHOULD to reject both conflict pairs, without changing SHOULD to MUST.
+
+**Unresolved, explicitly outside B1: `status.update.policy.scope`.** D14 reuses the scope mechanism, but the precise applicability of Manifest core-tag minimum, conflict-pair validation, and this URL interpretation to `policy.scope` remains open. B1 adds no such semantic checks to that optional field and does not treat passing existing schema validation as proof that this normative question is resolved.
 
 ### 3.4 The Status Lifecycle
 
@@ -847,7 +855,7 @@ Read PROOFMETA_ANWEISUNG.md. Then scaffold the repo:
 
 ## 10. Open Questions (To Decide)
 
-All v1 design questions have been resolved. New questions will be added here as they arise during implementation.
+The applicability of D11 Manifest scope semantics to the optional Mode B `policy.scope` field remains unresolved and is explicitly excluded from B1. No equivalence or new semantic validator claim for that field is established by B1. Other new questions will be added here as they arise during implementation.
 
 ### Decided Questions (locked in)
 
@@ -868,7 +876,7 @@ All v1 design questions have been resolved. New questions will be added here as 
 | D13 | Byte-level integrity for licensed items | **Optional `content_hash` on catalog items, SHOULD for static content.** Manifests and catalog results MAY include `content_hash: sha256:<hex>` on each item. Providers of static content (files, datasets, skill packs) SHOULD include it so Consumers can verify bytes delivered via the GRANTED envelope match what was licensed. Dynamic items (services, APIs, streams) SHOULD omit it. A license GRANTED against an item without `content_hash` does not bind the licensee to any specific byte sequence. See §3.3, §3.8. | 2026-04-23 |
 | D14 | How standalone policy / governance verdicts are expressed | **Reuse `status.update` as a root attestation — no new payload type.** A `status.update` may be EITHER a chained licensing verdict (`request_id`) OR a root attestation carrying `subject` + `policy` and no `request_id`, signed by the asserting authority. A `oneOf` makes the two modes mutually exclusive, so existing licensing verdicts validate unchanged and a missing `request_id` is only valid when `subject` + `policy` are present. The status enum and scope-URL mechanism (D11) are reused; no core vocabulary change. Attestation history chains use free transitions (no terminal states) with a constant subject. See §3.4.1, `docs/scope-vocabulary.md`, `docs/attestation-extension-proposal.md`. | 2026-06-21 |
 | D15 | Which capabilities define the v1 release boundary? | **v1 is the smallest useful protocol release: the free Tier-1 vertical flow with no payment, blockchain, or anchor dependency.** Payment resolver, anchor resolver, and the Tier-3 demo are v1.1 scope. Implementation checkboxes do not by themselves prove release acceptance; v1 still requires the recorded Provider/Consumer setup benchmarks and publication at the canonical spec domain. | 2026-09-01 |
-| D16 | What exactly does an envelope author sign? | **A deterministic JCS signing projection containing exactly `proofmeta`, `payload_hash`, `author`, `timestamp`, and `in_reply_to` when present.** The payload is transitively authenticated through the signed `payload_hash`; roots omit `in_reply_to` from both envelope and projection. This replaces payload-hash-only signing as a breaking pre-v1 draft change targeted for packages 0.3.0. A 0.3.0 verifier MUST fail closed and MUST NOT silently retry or accept the legacy rule as valid. See §3.1.1. | 2026-09-04 |
+| D16 | What exactly does an envelope author sign? | **A deterministic JCS signing projection containing exactly `proofmeta`, `payload_hash`, `author`, `timestamp`, and `in_reply_to` when present.** The payload is transitively authenticated through the signed `payload_hash`; roots omit `in_reply_to` from both envelope and projection. This replaces payload-hash-only signing as a breaking pre-v1 draft change originally targeted for packages 0.3.0; B1 package-version reconciliation is recorded in §3.1.1 and `docs/MILESTONE-SCOPE-FREEZE.md`, without changing this projection. Verifiers on this path MUST fail closed and MUST NOT silently retry or accept the legacy rule as valid. See §3.1.1. | 2026-09-04 |
 | D17 | Are anchors author-signed, and when do they add trust? | **Anchors remain outside the author signing projection and are independently verified external evidence.** Their mutation does not change Tier-1 signature validity. Presence alone contributes no trust; an applicable resolver or verifier must validate that the reference commits to the authenticated payload/context identity before an anchor can satisfy policy. See §3.5. | 2026-09-04 |
 | D18 | Who has authority to author v1 manifests and license lifecycles? | **Manifest `author == payload.provider.id`; root OPEN `author == payload.consumer.id`; every license-chain `status.update` author equals the root OPEN's `payload.provider_id`.** Resolvers inform Provider decisions but are not direct lifecycle authorities in v1. Resolver-signed statuses fail closed until v1.1 defines explicit DID-based delegation/authorization. Root attestations remain outside this license-chain rule. See §3.3, §3.4, §3.4.1, §3.6. | 2026-09-04 |
 | D19 | What milestone supersedes the stale W21 checker freeze? | **A tightly bounded security-first v1 protocol-hardening milestone.** It covers envelope authenticity, lifecycle authorization, fail-closed validation, context/mode semantics, JCS/JSON-ingress conformance, reproducibility gates, and normative vectors. Payments, anchor implementation, Tier 3, registries, ERC-7521, and unrelated product work are excluded. See `docs/MILESTONE-SCOPE-FREEZE.md`. | 2026-09-04 |

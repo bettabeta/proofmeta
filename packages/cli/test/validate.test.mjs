@@ -88,10 +88,33 @@ async function validRequestChain() {
     in_reply_to: pendingEnv.payload_hash,
   });
 
-  return Object.assign([openEnv, pendingEnv, grantedEnv], { provider, consumer });
+  // Extra array properties are not JSON-domain evidence.
+  return { envelopes: [openEnv, pendingEnv, grantedEnv], provider, consumer };
 }
 
 // ── Tests ──────────────────────────────────────────────────────────────
+
+test("empty chain is a diagnostic rejection, not a throw or vacuous pass", async () => {
+  const report = await validateInput([]);
+  assert.equal(report.ok, false);
+  assert.equal(report.kind, "chain");
+  assert.deepEqual(report.envelopes, []);
+  assert.equal(report.chain.ok, false);
+  assert.equal(report.accepted, false);
+  assert.equal(report.guarantees.operationalAuthorization, false);
+});
+
+test('validate signed URL-only manifest rejects via shared acceptance gate', async () => {
+  const { env, kp } = await validManifestEnvelope();
+  const payload = structuredClone(env.payload);
+  payload.license_types[0].scope = ['https://example.test/scope'];
+  const signed = await createEnvelope({ payload, author: kp.did, privateKey: kp.privateKey });
+  const report = await validateInput(signed);
+  assert.equal(report.ok, false);
+  assert.equal(report.accepted, false);
+  assert.equal(report.errors[0].code, 'SCOPE_INVALID');
+  assert.equal(report.guarantees.operationalAuthorization, false);
+});
 
 test("valid single envelope passes all checks", async () => {
   const { env } = await validManifestEnvelope();
@@ -115,7 +138,7 @@ test("fails schema when required fields are missing", async () => {
   assert.equal(report.ok, false);
   assert.equal(report.envelopes[0].schema.ok, false);
   assert.ok(
-    report.envelopes[0].schema.errors.some((e) => /author/.test(e)),
+    report.envelopes[0].schema.errors.some((e) => /SCHEMA_INVALID/.test(e)),
     `expected an error mentioning 'author', got: ${report.envelopes[0].schema.errors.join(" | ")}`,
   );
 });
@@ -164,7 +187,7 @@ test("detects payload_hash tampering", async () => {
   const report = await validateInput(broken);
   assert.equal(report.ok, false);
   assert.equal(report.envelopes[0].hash.ok, false);
-  assert.match(report.envelopes[0].hash.reason, /mismatch/);
+  assert.match(report.envelopes[0].hash.reason, /HASH_MISMATCH/);
 });
 
 test("detects signature tampering", async () => {
@@ -180,9 +203,9 @@ test("detects signature tampering", async () => {
 });
 
 test("valid chain: OPEN → PENDING → GRANTED verifies end-to-end", async () => {
-  const chain = await validRequestChain();
+  const { envelopes: chain } = await validRequestChain();
   const report = await validateInput(chain);
-  assert.equal(report.ok, true);
+  assert.equal(report.ok, true, JSON.stringify(report.errors));
   assert.equal(report.kind, "chain");
   assert.equal(report.envelopes.length, 3);
   assert.equal(report.chain.ok, true);
@@ -193,8 +216,7 @@ test("valid chain: OPEN → PENDING → GRANTED verifies end-to-end", async () =
 });
 
 test("broken in_reply_to in chain is detected", async () => {
-  const chain = await validRequestChain();
-  const { provider } = chain;
+  const { envelopes: chain, provider } = await validRequestChain();
 
   // Re-sign the middle envelope with a valid key but wrong in_reply_to.
   const middle = await createEnvelope({

@@ -63,8 +63,11 @@ test("validate rejects a signed status.update containing request_id and subject"
   });
 
   const r = await validateInput(envelope);
-  assert.equal(r.envelopes[0].hash.ok, true);
-  assert.equal(r.envelopes[0].signature.ok, true);
+  // SDK rejects malformed modes before cryptography.
+  assert.equal(r.envelopes[0].hash.ok, false);
+  assert.equal(r.envelopes[0].signature.ok, false);
+  assert.equal(r.checks.hash, 'not-checked');
+  assert.equal(r.checks.signature, 'not-checked');
   assert.equal(r.envelopes[0].schema.ok, false, "request_id and subject must not share a status.update mode");
   assert.equal(r.ok, false);
 });

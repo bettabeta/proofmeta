@@ -4,6 +4,14 @@ Reference TypeScript SDK for the [ProofMeta Protocol](https://github.com/bettabe
 
 Chain-agnostic. No payment, delivery, or anchor code in core — those live behind the resolver interface in their own packages.
 
+## Local 0.5.0 preparation and migration status
+
+Version-P1/Z1 prepares the local dependency graph and build tools only. It does not publish a 0.5.0 package, complete B1 hardening, or add an Acceptance API, `./acceptance` export, generated validators or generator script. Existing crypto APIs and the root export remain unchanged; crypto verification is not full schema/transport/authorization acceptance.
+
+Later B1 integration is intended to add Acceptance checks and stricter rejects; callers must distinguish validate/accept outcomes from crypto verification and preserve original raw input where required. Parsed values cannot guarantee original transport bytes. `policy.scope` semantics remain open; this remains a v1 draft. Independent QA and P2 runtime/packaging/release gates are not satisfied by this version bump.
+
+Build/dev pins: `@proofmeta/spec` 0.4.0, Ajv 8.18.0, ajv-formats 3.0.1, esbuild 0.28.2 and TypeScript 5.7.3. They are not SDK runtime dependencies. The lock resolves Ajv's transitive fast-uri to 3.1.8 (including nested instances); refresh it deliberately and audit, do not copy a scratch lock. CLI/demos consume the SDK, never the reverse. Node >=18 and ES2022 remain unchanged; Node 18 crypto may require `NODE_OPTIONS=--experimental-global-webcrypto` and this requirement remains open, not repaired here. For a fresh monorepo checkout, run `node scripts/version-p1-install-smoke.mjs --preinstall && npm ci --ignore-scripts --no-audit` from the root before post-smoke/build/test/audit. The dependency-free PRE admits only the exact audited root/workspace/lock bytes; injected workspace prepare, local-directory/git and changed graphs fail before npm launch. This is not a malicious-checkout/TOCTOU sandbox or a policy for arbitrary published-package installs; see the root README for precise guarantees, trust prerequisites and the complete bounded sequence, and [THIRD-PARTY-NOTICES.md](./THIRD-PARTY-NOTICES.md) for pinned-artifact notices.
+
 ## Install
 
 ```

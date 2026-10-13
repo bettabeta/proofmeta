@@ -19,9 +19,9 @@ import { randomBytes } from "node:crypto";
 import {
   generateKeyPair,
   createEnvelope,
-  verifyEnvelope,
-  verifyChain,
 } from "@proofmeta/sdk-ts";
+import { acceptProtocolInput, parseProtocolJson } from "@proofmeta/sdk-ts/acceptance";
+import { acceptConsumerResponse } from "./acceptance.mjs";
 
 const PROVIDER_ORIGIN = process.env.PROVIDER_ORIGIN ?? "http://127.0.0.1:4100";
 
@@ -30,10 +30,9 @@ const PROVIDER_ORIGIN = process.env.PROVIDER_ORIGIN ?? "http://127.0.0.1:4100";
 const manifestUrl = `${PROVIDER_ORIGIN}/.well-known/proofmeta.json`;
 const manifestRes = await fetch(manifestUrl);
 if (!manifestRes.ok) fail(`manifest fetch failed: ${manifestRes.status}`);
-const manifestEnvelope = await manifestRes.json();
-
-const mv = await verifyEnvelope(manifestEnvelope);
-if (!mv.ok) fail(`manifest verification failed: ${mv.reason}`);
+const mv = await acceptProtocolInput({ kind: "bytes", bytes: new Uint8Array(await manifestRes.arrayBuffer()) }, { operation: "manifest", purpose: "protocol-conformance" });
+if (!mv.accepted) fail(`manifest acceptance failed: ${mv.errors[0]?.code}`);
+const manifestEnvelope = mv.snapshot;
 console.log(`[consumer] manifest verified — provider DID ${manifestEnvelope.payload.provider.id}`);
 
 const manifest = manifestEnvelope.payload;
@@ -87,17 +86,21 @@ const postRes = await fetch(requestEndpoint, {
   body: JSON.stringify(openEnvelope),
 });
 if (!postRes.ok) {
-  const txt = await postRes.text();
-  fail(`request POST failed: ${postRes.status} ${txt}`);
+  fail(`request POST failed: ${postRes.status}`);
 }
-const { chain } = await postRes.json();
-if (!Array.isArray(chain) || chain.length < 2) fail("server returned unexpected chain shape");
-console.log(`[consumer] received ${chain.length}-envelope chain`);
+const responseBytes = new Uint8Array(await postRes.arrayBuffer());
 
 // ── 5. Verify the chain end-to-end ────────────────────────────────────────
 
-const cv = await verifyChain(chain);
-if (!cv.ok) fail(`chain verification failed: ${cv.reason}`);
+const responseContext = {
+  operation: "license-chain", purpose: "consumer-response", sentOpen: openEnvelope,
+  expectedProvider: manifest.provider.id, manifest: manifestEnvelope, item,
+  licenseType: licenseType.id, termsHash: licenseType.terms_hash,
+};
+const cv = await acceptConsumerResponse(responseBytes, responseContext);
+if (!cv.accepted) fail(`chain acceptance failed: ${cv.errors[0]?.code}`);
+const chain = cv.snapshot;
+console.log(`[consumer] received ${chain.length}-envelope chain`);
 
 const final = chain[chain.length - 1];
 console.log(`[consumer] chain OK — final status=${final.payload.status}`);
@@ -108,12 +111,14 @@ if (final.payload.status !== "GRANTED") fail(`expected GRANTED, got ${final.payl
 const getUrl = `${requestEndpoint}/${requestId}`;
 const getRes = await fetch(getUrl);
 if (!getRes.ok) fail(`GET status failed: ${getRes.status}`);
-const latest = await getRes.json();
-const lv = await verifyEnvelope(latest);
-if (!lv.ok) fail(`GET status envelope invalid: ${lv.reason}`);
-if (latest.payload.status !== "GRANTED" || latest.payload.request_id !== requestId) {
-  fail("GET status envelope did not match expectations");
-}
+const latest = parseProtocolJson(new Uint8Array(await getRes.arrayBuffer()));
+// Anchors are not signed identity. A changed signed head must extend the
+// accepted chain, never replace history using only the request ID.
+const sameHead = latest && ["proofmeta", "payload_hash", "author", "timestamp", "in_reply_to", "signature"]
+  .every(key => latest[key] === final[key]);
+const followed = sameHead ? [...chain.slice(0, -1), latest] : [...chain, latest];
+const lv = await acceptProtocolInput({ kind: "value", value: followed }, responseContext);
+if (!lv.accepted) fail(`GET status acceptance failed: ${lv.errors[0]?.code}`);
 
 console.log("[consumer] full Tier-1 flow completed OK");
 

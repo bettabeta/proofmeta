@@ -9,6 +9,7 @@
     "allowSyntheticDefaultImports": true,
     "outDir": "dist",
     "rootDir": "src",
+    "rootDirs": ["src", "dist"],
     "strict": true,
     "skipLibCheck": true
   },
