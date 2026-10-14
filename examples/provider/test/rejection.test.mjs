@@ -15,7 +15,10 @@
 
 import { test, before, after } from "node:test";
 import assert from "node:assert/strict";
-import { spawn } from "node:child_process";
+import { spawn, spawnSync } from "node:child_process";
+import { mkdirSync, writeFileSync } from "node:fs";
+import { createHash } from "node:crypto";
+import { acceptProtocolInput } from "@proofmeta/sdk-ts/acceptance";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { mkdtemp, writeFile, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
@@ -242,7 +245,7 @@ async function controlledProvider(t) {
     post(body) {
       return request(`${origin}/api/proofmeta/request`, {
         method: "POST", headers: { "content-type": "application/json" },
-        body: JSON.stringify(body),
+        body: Buffer.isBuffer(body) ? body : JSON.stringify(body),
       });
     },
     get(id, full = false) {
@@ -416,6 +419,148 @@ test("H4: different IDs reach the resolver concurrently and publish independent 
   }
 });
 
+// Shared actual bytes for HTTP/SDK/CLI, with explicit contract codes rather
+// than a schema-only oracle. Every rejection is followed by the valid same ID.
+const rawCases = [
+  ["schema-item", "SCHEMA_INVALID", { item_id: 7 }],
+  ["missing-request-id", "SCHEMA_INVALID", { request_id: undefined }],
+  ["timestamp-nonUTC", "SCHEMA_INVALID", {}, { timestamp: "2026-01-01T00:00:00+03:00" }],
+  ["timestamp-negative-zero", "SCHEMA_INVALID", {}, { timestamp: "2026-01-01T00:00:00-00:00" }],
+  ["timestamp-calendar", "SCHEMA_INVALID", {}, { timestamp: "2026-02-30T00:00:00Z" }],
+  ["nonroot", "ROOT_INVALID", {}, { in_reply_to: "sha256:" + "a".repeat(64) }],
+  ["authors", "AUTHORITY_MISMATCH", { consumer: { id: "did:key:other" } }],
+  ["provider-context", "CONTEXT_MISMATCH", { provider_id: "did:key:other" }],
+  ["invalidUTF8", "UTF8_INVALID"],
+  ["BOM", "BOM_UNSUPPORTED"],
+  ["decodedduplicate", "JSON_DUPLICATE_KEY"],
+  ["syntax", "JSON_SYNTAX"],
+  ["null", "SCHEMA_INVALID"],
+  ["array", "SCHEMA_INVALID"],
+  ["empty", "JSON_SYNTAX"],
+];
+for (const [name, code, overrides = {}, options = {}] of rawCases) {
+  test(`raw acceptance: ${name} rejects before resolver and preserves ID`, async (t) => {
+    const provider = await controlledProvider(t);
+    provider.release();
+    const valid = await provider.open();
+    const consumer = await generateKeyPair();
+    const payload = { ...valid.payload, consumer: { id: consumer.did }, ...overrides };
+    // Omission is actual JSON omission, not a forbidden JS undefined value.
+    if (payload.request_id === undefined) delete payload.request_id;
+    const signed = await createEnvelope({ payload, author: consumer.did,
+      privateKey: consumer.privateKey, ...options });
+    assert.equal((await verifyEnvelope(signed)).ok, name === "authors" ? false : true);
+    let bytes = Buffer.from(JSON.stringify(signed));
+    if (name === "invalidUTF8") bytes = Buffer.concat([bytes, Buffer.from([0xc3, 0x28])]);
+    if (name === "BOM") bytes = Buffer.concat([Buffer.from([0xef, 0xbb, 0xbf]), bytes]);
+    if (name === "decodedduplicate") bytes = Buffer.from(JSON.stringify(signed).replace(
+      '"timestamp":', `"time\\u0073tamp":${JSON.stringify(signed.timestamp)},"timestamp":`));
+    if (name === "syntax") bytes = Buffer.from('{"private":"do-not-echo",');
+    if (name === "null") bytes = Buffer.from("null");
+    if (name === "array") bytes = Buffer.from("[]");
+    if (name === "empty") bytes = Buffer.alloc(0);
+    const context = { operation: "provider-open", purpose: "protocol-conformance",
+      expectedProvider: valid.payload.provider_id };
+    const sdk = await acceptProtocolInput({ kind: "bytes", bytes }, context);
+    assert.equal(sdk.accepted, false, name);
+    assert.equal(sdk.errors[0].code, code, name);
+    const scratch = await mkdtemp(path.join(tmpdir(), "proofmeta-provider-parity-"));
+    t.after(() => rm(scratch, { recursive: true, force: true }));
+    const source = path.join(scratch, "input.json");
+    const contextFile = path.join(scratch, "context.json");
+    await writeFile(source, bytes);
+    await writeFile(contextFile, JSON.stringify({ expectedProvider: context.expectedProvider }));
+    const cli = spawnSync(process.execPath, [path.resolve(here, "../../../packages/cli/bin/proofmeta.mjs"),
+      "accept", source, "--operation", context.operation, "--purpose", context.purpose,
+      "--context", contextFile, "--json"], { encoding: "utf8", timeout: 6000, maxBuffer: 1024 * 1024 });
+    assert.equal(cli.status, 1, cli.stderr);
+    assert.deepEqual(JSON.parse(cli.stdout), JSON.parse(JSON.stringify(sdk)));
+    const rejected = await provider.post(bytes);
+    const response = await rejected.json();
+    if (process.env.PROVIDER_EVIDENCE_DIR) {
+      mkdirSync(process.env.PROVIDER_EVIDENCE_DIR, { recursive: true });
+      writeFileSync(path.join(process.env.PROVIDER_EVIDENCE_DIR, `${name}.json`), JSON.stringify({
+        name, expectedCode: code, rawBase64: bytes.toString("base64"),
+        rawSha256: createHash("sha256").update(bytes).digest("hex"), context,
+        sdk, cli: { status: cli.status, stdout: cli.stdout, stderr: cli.stderr },
+        http: { status: rejected.status, response }, resolverCalls: [...provider.calls],
+      }, null, 2));
+    }
+    assert.equal(rejected.status, 400, name);
+    assert.equal(response.code, code, name);
+    assert.deepEqual(Object.keys(response).sort(), ["code", "error"]);
+    assert.ok(JSON.stringify(response).length < 512);
+    assert.equal(provider.calls.length, 0, name);
+    assert.equal((await provider.get(valid.payload.request_id, true)).status, 404);
+    const accepted = await provider.post(valid);
+    assert.equal(accepted.status, 200, name);
+    await assertValidChain((await accepted.json()).chain, valid);
+    assert.deepEqual(provider.calls, [valid.payload.request_id]);
+    if (process.env.PROVIDER_EVIDENCE_DIR) writeFileSync(
+      path.join(process.env.PROVIDER_EVIDENCE_DIR, `${name}-same-id.json`),
+      JSON.stringify({ status: accepted.status, resolverCalls: provider.calls, requestId: valid.payload.request_id }));
+  });
+}
+
+for (const [name, timestamp] of [["UTC-Z", "2026-01-01T00:00:00Z"],
+  ["UTC-z", "2026-01-01t00:00:00z"], ["UTC-offset", "2026-01-01T00:00:00+00:00"]]) {
+  test(`raw acceptance positive: ${name} matches SDK/CLI and grants`, async (t) => {
+    const provider = await controlledProvider(t);
+    provider.release();
+    const valid = await provider.open();
+    const consumer = await generateKeyPair();
+    const signed = await createEnvelope({ payload: { ...valid.payload, consumer: { id: consumer.did } },
+      author: consumer.did, privateKey: consumer.privateKey, timestamp });
+    const bytes = Buffer.from(JSON.stringify(signed));
+    const context = { operation: "provider-open", purpose: "protocol-conformance",
+      expectedProvider: signed.payload.provider_id };
+    const sdk = await acceptProtocolInput({ kind: "bytes", bytes }, context);
+    assert.equal(sdk.accepted, true);
+    const scratch = await mkdtemp(path.join(tmpdir(), "proofmeta-provider-positive-"));
+    t.after(() => rm(scratch, { recursive: true, force: true }));
+    const source = path.join(scratch, "input.json"), contextFile = path.join(scratch, "context.json");
+    await writeFile(source, bytes);
+    await writeFile(contextFile, JSON.stringify({ expectedProvider: context.expectedProvider }));
+    const cli = spawnSync(process.execPath, [path.resolve(here, "../../../packages/cli/bin/proofmeta.mjs"),
+      "accept", source, "--operation", context.operation, "--purpose", context.purpose,
+      "--context", contextFile, "--json"], { encoding: "utf8", timeout: 6000, maxBuffer: 1024 * 1024 });
+    assert.equal(cli.status, 0, cli.stderr);
+    assert.deepEqual(JSON.parse(cli.stdout), JSON.parse(JSON.stringify(sdk)));
+    const response = await provider.post(bytes);
+    assert.equal(response.status, 200);
+    const body = await response.json();
+    await assertValidChain(body.chain, signed);
+    assert.deepEqual(provider.calls, [signed.payload.request_id]);
+    if (process.env.PROVIDER_EVIDENCE_DIR) {
+      mkdirSync(process.env.PROVIDER_EVIDENCE_DIR, { recursive: true });
+      writeFileSync(path.join(process.env.PROVIDER_EVIDENCE_DIR, `${name}.json`), JSON.stringify({
+        name, rawBase64: bytes.toString("base64"), rawSha256: createHash("sha256").update(bytes).digest("hex"),
+        context, sdk, cli: { status: cli.status, stdout: cli.stdout, stderr: cli.stderr },
+        http: { status: response.status, response: body }, resolverCalls: provider.calls,
+      }, null, 2));
+    }
+  });
+}
+
+for (const [field, code] of [["item_id", "ITEM_UNKNOWN"], ["license_type", "LICENSE_TYPE_UNKNOWN"]]) {
+  test(`business acceptance: bounded ${field} rejection preserves ID`, async (t) => {
+    const provider = await controlledProvider(t);
+    provider.release();
+    const valid = await provider.open();
+    const invalid = await provider.open({ request_id: valid.payload.request_id, [field]: "private-".repeat(2000) });
+    const rejected = await provider.post(invalid);
+    assert.equal(rejected.status, 400);
+    const response = await rejected.json();
+    assert.equal(response.code, code);
+    assert.ok(JSON.stringify(response).length < 512);
+    assert.equal(provider.calls.length, 0);
+    const accepted = await provider.post(valid);
+    assert.equal(accepted.status, 200);
+    await assertValidChain((await accepted.json()).chain, valid);
+    assert.deepEqual(provider.calls, [valid.payload.request_id]);
+  });
+}
+
 // ── Happy-path sanity fixture ─────────────────────────────────────────────
 
 test("happy path: valid OPEN returns 200 + 3-envelope chain", async () => {
@@ -438,7 +583,7 @@ test("rejects tampered signature", async () => {
   const res = await postRequest(env);
   assert.equal(res.status, 400);
   const { error } = await res.json();
-  assert.match(error, /invalid envelope/);
+  assert.equal(error, "invalid protocol input");
 });
 
 test("rejects tampered payload (hash mismatch)", async () => {
@@ -448,7 +593,7 @@ test("rejects tampered payload (hash mismatch)", async () => {
   const res = await postRequest(env);
   assert.equal(res.status, 400);
   const { error } = await res.json();
-  assert.match(error, /invalid envelope/);
+  assert.equal(error, "invalid protocol input");
 });
 
 test("rejects wrong provider_id (replay-rejection)", async () => {
@@ -473,8 +618,7 @@ test("rejects wrong provider_id (replay-rejection)", async () => {
   const res = await postRequest(env);
   assert.equal(res.status, 400);
   const { error } = await res.json();
-  assert.match(error, /provider_id/);
-  assert.match(error, /replay-rejection/);
+  assert.equal(error, "invalid protocol input");
 });
 
 test("rejects consumer.id mismatch with envelope.author", async () => {
@@ -500,7 +644,7 @@ test("rejects consumer.id mismatch with envelope.author", async () => {
   const res = await postRequest(env);
   assert.equal(res.status, 400);
   const { error } = await res.json();
-  assert.match(error, /OPEN author must equal payload.consumer.id/);
+  assert.equal(error, "invalid protocol input");
 });
 
 test("rejects unknown license_type", async () => {
@@ -549,7 +693,7 @@ test("rejects non-OPEN status on license.request payload", async () => {
   const res = await postRequest(env);
   assert.equal(res.status, 400);
   const { error } = await res.json();
-  assert.match(error, /type\/status not license\.request\/OPEN/);
+  assert.equal(error, "invalid protocol input");
 });
 
 test("rejects duplicate request_id (one-shot replay protection)", async () => {
@@ -569,7 +713,7 @@ test("rejects empty body with 400", async () => {
   });
   assert.equal(res.status, 400);
   const { error } = await res.json();
-  assert.match(error, /empty body/);
+  assert.equal(error, "invalid protocol input");
 });
 
 // ── GET-side coverage ─────────────────────────────────────────────────────

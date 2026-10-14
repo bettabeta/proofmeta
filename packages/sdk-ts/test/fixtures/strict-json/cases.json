@@ -1,0 +1,14 @@
+[
+  {"name":"top duplicate","raw":"{\"a\":1,\"a\":2}","code":"JSON_DUPLICATE_KEY","position":7},
+  {"name":"nested escaped duplicate","raw":"{\"o\":{\"a\":1,\"\\u0061\":2}}","code":"JSON_DUPLICATE_KEY","position":12},
+  {"name":"quote duplicate","raw":"{\"a\\\"\":1,\"a\\u0022\":2}","code":"JSON_DUPLICATE_KEY","position":9},
+  {"name":"backslash duplicate","raw":"{\"a\\\\\":1,\"a\\u005c\":2}","code":"JSON_DUPLICATE_KEY","position":9},
+  {"name":"proto duplicate","raw":"{\"__proto__\":1,\"\\u005f_proto__\":2}","code":"JSON_DUPLICATE_KEY","position":15},
+  {"name":"overflow","raw":"1e400","code":"JSON_DOMAIN"},
+  {"name":"high surrogate","raw":"\"\\ud800\"","code":"JSON_DOMAIN"},
+  {"name":"low surrogate key","raw":"{\"\\udfff\":0}","code":"JSON_DOMAIN"},
+  {"name":"trailing comma","raw":"{\"a\":1,}","code":"JSON_SYNTAX"},
+  {"name":"invalid escape","raw":"\"\\qSECRET\"","code":"JSON_SYNTAX"},
+  {"name":"duplicate before syntax","raw":"{\"a\":1,\"a\":2,}","code":"JSON_DUPLICATE_KEY","position":7},
+  {"name":"syntax before duplicate","raw":"{\"a\":!,\"a\":2}","code":"JSON_SYNTAX"}
+]

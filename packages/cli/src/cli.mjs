@@ -9,7 +9,43 @@
 
 import { readFile } from "node:fs/promises";
 import { readFileSync } from "node:fs";
-import { validateInput, formatReport } from "./validate.mjs";
+import { validateBytes, formatReport } from "./validate.mjs";
+import { acceptProtocolInput, parseProtocolJson } from '@proofmeta/sdk-ts/acceptance';
+
+async function acceptCommand(args) {
+  let file, operation, purpose, contextFile;
+  for (let i = 0; i < args.length; i++) {
+    const arg = args[i];
+    if (arg === '--operation' || arg === '--purpose' || arg === '--context') {
+      const value = args[++i];
+      if (!value || value.startsWith('--') || (arg === '--operation' ? operation : arg === '--purpose' ? purpose : contextFile) !== undefined) return 2;
+      if (arg === '--operation') operation = value; else if (arg === '--purpose') purpose = value; else contextFile = value;
+    } else if (arg === '--json') { /* Acceptance reports are always JSON. */ }
+    else if (arg.startsWith('-') || file !== undefined) return 2;
+    else file = arg;
+  }
+  if (!file || !['manifest','provider-open','license-chain','attestation-root','attestation-chain','inspect-envelope'].includes(operation)
+    || (operation === 'inspect-envelope' ? purpose !== 'inspection' : purpose !== 'protocol-conformance' && !(operation === 'license-chain' && purpose === 'consumer-response'))) {
+    process.stderr.write('proofmeta accept: explicit valid --operation and --purpose required\n');
+    return 2;
+  }
+  let bytes;
+  try { bytes = await readFile(file); }
+  catch { process.stderr.write('proofmeta accept: cannot read source file\n'); return 2; }
+  let evidence = {};
+  if (contextFile !== undefined) {
+    try { evidence = parseProtocolJson(await readFile(contextFile)); }
+    catch { process.stderr.write('proofmeta accept: invalid or unreadable context file\n'); return 2; }
+    if (!evidence || typeof evidence !== 'object' || Array.isArray(evidence)
+      || ('operation' in evidence && evidence.operation !== operation)
+      || ('purpose' in evidence && evidence.purpose !== purpose) || 'resolveAuthor' in evidence) {
+      process.stderr.write('proofmeta accept: invalid context configuration\n'); return 2;
+    }
+  }
+  const report = await acceptProtocolInput({ kind: 'bytes', bytes }, { ...evidence, operation, purpose });
+  process.stdout.write(JSON.stringify(report, null, 2) + '\n');
+  return report.accepted ? 0 : 1;
+}
 
 const { version: CLI_VERSION } = JSON.parse(
   readFileSync(new URL("../package.json", import.meta.url), "utf-8"),
@@ -18,8 +54,10 @@ const { version: CLI_VERSION } = JSON.parse(
 const USAGE = `proofmeta — ProofMeta reference validator
 
 Usage:
-  proofmeta validate <file>          Validate a single envelope or chain (JSON file).
-  proofmeta validate <file> --json   Emit the verification report as JSON.
+  proofmeta accept <file> --operation <op> --purpose <purpose> [--context <file>]
+                                    Emit SDK AcceptanceReport JSON; inspection never accepted.
+  proofmeta validate <file>          Konformitätsdiagnostik only (accepted=false).
+  proofmeta validate <file> --json   Emit compatibility keys plus SDK checks/errors/guarantees.
   proofmeta --help                   Show this help.
   proofmeta --version                Print the CLI version.
 
@@ -45,6 +83,7 @@ export async function main(argv) {
     return 0;
   }
 
+  if (argv[0] === 'accept') return acceptCommand(argv.slice(1));
   if (argv[0] !== "validate") {
     process.stderr.write(`proofmeta: unknown command: ${argv[0]}\n\n`);
     process.stderr.write(USAGE);
@@ -77,21 +116,17 @@ export async function main(argv) {
 
   let raw;
   try {
-    raw = await readFile(file, "utf-8");
+    raw = await readFile(file);
   } catch (err) {
     process.stderr.write(`proofmeta validate: cannot read ${file}: ${err.message}\n`);
     return 2;
   }
 
-  let parsed;
-  try {
-    parsed = JSON.parse(raw);
-  } catch (err) {
-    process.stderr.write(`proofmeta validate: ${file} is not valid JSON: ${err.message}\n`);
+  const report = await validateBytes(raw);
+  if (report.errors?.[0]?.code === 'JSON_SYNTAX') {
+    process.stderr.write('proofmeta validate: JSON_SYNTAX\n');
     return 2;
   }
-
-  const report = await validateInput(parsed);
 
   if (json) {
     process.stdout.write(JSON.stringify(report, null, 2) + "\n");

@@ -28,159 +28,55 @@
  * and the reference SDK agree on what "valid" means.
  */
 
-import Ajv from "ajv";
-import addFormats from "ajv-formats";
-import {
-  envelopeSchema,
-  payloadSchemas,
-} from "@proofmeta/spec";
-import {
-  hashPayload,
-  hashesEqual,
-  verifyEnvelope,
-  verifyChain,
-  validateStatusTransitions,
-  validateAttestationChain,
-  isAttestationEnvelope,
-} from "@proofmeta/sdk-ts";
-
-// Prepare a single Ajv instance with all known payload schemas compiled once.
-const ajv = new Ajv({ allErrors: true, strict: false });
-addFormats(ajv);
-const validateEnvelope = ajv.compile(envelopeSchema);
-const payloadValidators = Object.fromEntries(
-  Object.entries(payloadSchemas).map(([type, schema]) => [type, ajv.compile(schema)]),
-);
-
-const KNOWN_PAYLOAD_TYPES = Object.keys(payloadSchemas);
-
-function ajvErrorsToStrings(errors) {
-  if (!errors) return [];
-  return errors.map((e) => {
-    const path = e.instancePath || "(root)";
-    return `${path} ${e.message ?? "invalid"}`;
-  });
+import { acceptProtocolInput } from '@proofmeta/sdk-ts/acceptance';
+export async function validateBytes(bytes) {
+  return validateSource({ kind: 'bytes', bytes });
 }
 
-async function validateOne(env, index) {
-  const report = {
-    index,
-    ok: false,
-    payload_type: undefined,
-    schema: { ok: false, errors: [] },
-    hash: { ok: false },
-    signature: { ok: false },
-  };
-
-  // 1. Envelope schema
-  const envelopeOk = validateEnvelope(env);
-  if (!envelopeOk) {
-    report.schema.errors.push(...ajvErrorsToStrings(validateEnvelope.errors));
+const inspection = { operation: 'inspect-envelope', purpose: 'inspection' };
+const passed = checks => !Object.values(checks).includes('fail');
+function reason(report) {
+  return report.errors.map(e => `${e.code} ${e.path}`).join('; ') || 'not-checked';
+}
+function operationFor(input) {
+  const root = Array.isArray(input) ? input[0] : input;
+  const p = root?.payload;
+  const modeB = p?.type === 'status.update' && p.request_id === undefined && p.subject !== undefined && p.policy !== undefined;
+  if (Array.isArray(input)) return modeB ? 'attestation-chain' : 'license-chain';
+  return p?.type === 'manifest' ? 'manifest' : modeB ? 'attestation-root' : 'inspect-envelope';
+}
+async function validateOne(value, index) {
+  const r = await acceptProtocolInput({ kind: 'value', value }, inspection);
+  const check = name => ({ ok: r.checks[name] === 'pass', ...(r.checks[name] === 'pass' ? {} : { reason: reason(r) }) });
+  return { index, ok: passed(r.checks), payload_type: typeof value?.payload?.type === 'string' ? value.payload.type : undefined,
+    schema: { ok: r.checks.schema === 'pass', errors: r.checks.schema === 'pass' ? [] : [reason(r)] },
+    hash: check('hash'), signature: check('signature') };
+}
+async function adapt(result) {
+  const value = result.snapshot;
+  const isChain = Array.isArray(value);
+  const envelopes = result.checks.ingress === 'fail' ? [] : await Promise.all((isChain ? value : [value]).map(validateOne));
+  const report = { ...result, ok: result.operation === 'inspect-envelope' ? passed(result.checks) : result.accepted,
+    accepted: false, kind: isChain ? 'chain' : 'envelope', envelopes };
+  if (isChain) {
+    const diagnostic = reason(result).replace('PARENT_MISMATCH', 'PARENT_MISMATCH in_reply_to');
+    report.chain = report.ok ? { ok: true } : { ok: false, reason: diagnostic };
+    report.transitions = report.ok ? { ok: true } : { ok: false, reason: diagnostic };
   }
-
-  const payloadType =
-    env && typeof env === "object" && env.payload && typeof env.payload === "object"
-      ? env.payload.type
-      : undefined;
-  report.payload_type = typeof payloadType === "string" ? payloadType : undefined;
-
-  // 2. Payload schema (only for known types)
-  if (typeof payloadType === "string") {
-    const validator = payloadValidators[payloadType];
-    if (validator) {
-      const payloadOk = validator(env.payload);
-      if (!payloadOk) {
-        report.schema.errors.push(
-          ...ajvErrorsToStrings(validator.errors).map((s) => `payload ${s}`),
-        );
-      }
-    } else {
-      // Unknown payload types are allowed by the envelope schema (extension
-      // payloads), but we flag them so the operator notices.
-      report.schema.errors.push(
-        `payload.type "${payloadType}" is not a known core type (${KNOWN_PAYLOAD_TYPES.join(", ")}); skipping payload schema check`,
-      );
-    }
-  }
-
-  report.schema.ok = report.schema.errors.length === 0;
-
-  // If envelope itself is malformed, skip cryptographic checks — the
-  // fields we need may not even exist.
-  if (!envelopeOk) {
-    return report;
-  }
-
-  // 3. Hash recomputation (independent of signature so we can show both).
-  try {
-    const recomputed = hashPayload(env.payload);
-    if (hashesEqual(recomputed, env.payload_hash)) {
-      report.hash.ok = true;
-    } else {
-      report.hash.reason = `payload_hash mismatch — envelope says ${env.payload_hash}, canonical payload hashes to ${recomputed}`;
-    }
-  } catch (err) {
-    report.hash.reason = `hash computation failed: ${err.message}`;
-  }
-
-  // 4. Signature verification (delegates to SDK).
-  try {
-    const v = await verifyEnvelope(env);
-    if (v.ok) {
-      report.signature.ok = true;
-    } else {
-      report.signature.reason = v.reason;
-    }
-  } catch (err) {
-    report.signature.reason = `signature verification threw: ${err.message}`;
-  }
-
-  report.ok = report.schema.ok && report.hash.ok && report.signature.ok;
   return report;
+}
+async function validateSource(source) {
+  const ingress = await acceptProtocolInput(source, inspection);
+  if (ingress.checks.ingress === 'fail') return adapt(ingress);
+  const operation = operationFor(ingress.snapshot);
+  return adapt(operation === 'inspect-envelope' ? ingress : await acceptProtocolInput(source, { operation, purpose: 'protocol-conformance' }));
 }
 
 /**
  * Validate either a single envelope object or an array of envelopes (chain).
  */
 export async function validateInput(input) {
-  const isArray = Array.isArray(input);
-  const envelopes = isArray ? input : [input];
-
-  const envelopeReports = [];
-  for (let i = 0; i < envelopes.length; i++) {
-    // eslint-disable-next-line no-await-in-loop
-    envelopeReports.push(await validateOne(envelopes[i], i));
-  }
-
-  const allEnvelopesOk = envelopeReports.every((r) => r.ok);
-
-  const report = {
-    ok: allEnvelopesOk,
-    kind: isArray ? "chain" : "envelope",
-    envelopes: envelopeReports,
-  };
-
-  if (isArray) {
-    if (!allEnvelopesOk) {
-      report.chain = {
-        ok: false,
-        reason: "chain verification skipped because one or more envelopes failed individually",
-      };
-    } else {
-      const c = await verifyChain(envelopes);
-      report.chain = c.ok ? { ok: true } : { ok: false, reason: c.reason };
-      // Route the transitions check by chain kind, mirroring verifyChain: an
-      // attestation-rooted chain uses the free-transition / constant-subject
-      // rules; a license-rooted chain uses the lifecycle transition rules.
-      const t = isAttestationEnvelope(envelopes[0])
-        ? validateAttestationChain(envelopes)
-        : validateStatusTransitions(envelopes);
-      report.transitions = t.ok ? { ok: true } : { ok: false, reason: t.reason };
-      if (!report.chain.ok || !report.transitions.ok) report.ok = false;
-    }
-  }
-
-  return report;
+  return validateSource({ kind: 'value', value: input });
 }
 
 // ── Human-readable formatter ────────────────────────────────────────────
@@ -218,8 +114,9 @@ export function formatReport(report, filename) {
     }
   }
 
+  for (const error of report.errors ?? []) lines.push(`  ${error.code} ${error.path}`);
   lines.push("");
-  lines.push(report.ok ? "OK" : "FAIL");
+  lines.push(report.ok ? "OK (diagnostic only; accepted=false; no operational authorization)" : "FAIL (accepted=false)");
   return lines.join("\n") + "\n";
 }
 
