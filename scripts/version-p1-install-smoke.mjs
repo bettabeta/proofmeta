@@ -18,7 +18,7 @@ if (mode[0] === '--preinstall') {
     'examples/consumer/package.json': '409d596168d3e1da0620ebcb972e0a829eb331be04b6b1a04af095e4b092d557',
     'examples/provider/package.json': 'd57fe9c96c14289e14df45de7ddda8b0e88d4f499ebb54e84eb31f1d1688e499',
     'packages/cli/package.json': '88c8f5f9e65d0108c1bce2519a1fa72adce87c9811dcdddbf0e75ae2a2dd6265',
-    'packages/resolvers/free/package.json': '95ad7cd49fd5fc77b2ef5f96de88317bc408dd26e32f091f1e556c89bd5d8b9d',
+    'packages/resolvers/free/package.json': '801dc7525679a3d965e4cb020e13895517a991464c5148e1391e53bd15c93119',
     'packages/sdk-ts/package.json': '550c87f58a899b441cd8e6e6abf74613daa7f47f3d4fdb125c03b15f3654a771',
     'packages/spec/package.json': 'f5a4c8dcf9ff97fd30dade432734b22665816fa080f4cf255dd638f59fde88c8'
   };

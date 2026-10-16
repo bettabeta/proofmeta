@@ -4,9 +4,9 @@ Reference TypeScript SDK for the [ProofMeta Protocol](https://github.com/bettabe
 
 Chain-agnostic. No payment, delivery, or anchor code in core — those live behind the resolver interface in their own packages.
 
-## Local 0.5.0 preparation and migration status
+## 0.5.0 migration and compatibility
 
-`@proofmeta/sdk-ts@0.5.0` is a local workspace version, not a published npm release (`latest` on the registry is 0.2.0) and not release approval. The package exports the existing root API and `@proofmeta/sdk-ts/acceptance` (`acceptProtocolInput`). `npm run build` runs `scripts/build-acceptance-validators.mjs`, then `tsc`. `verifyEnvelope` and `verifyChain` remain crypto checks; they are not schema, transport, or authorization acceptance.
+`@proofmeta/sdk-ts@0.5.0` exports the existing root API and `@proofmeta/sdk-ts/acceptance` (`acceptProtocolInput`). `npm run build` runs `scripts/build-acceptance-validators.mjs`, then `tsc`. `verifyEnvelope` and `verifyChain` remain crypto checks; they are not schema, transport, or authorization acceptance. Package version 0.5.0 remains part of the v1 draft and does not declare the ProofMeta protocol v1 released.
 
 Callers must distinguish validate/accept outcomes from crypto verification and preserve original raw input where required. Parsed values cannot guarantee original transport bytes. `policy.scope` semantics remain open; this remains a v1 draft. Independent QA and P2 runtime/packaging/release gates are not satisfied by this version bump.
 

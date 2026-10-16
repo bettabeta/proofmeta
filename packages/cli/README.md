@@ -1,6 +1,6 @@
-# @proofmeta/cli — local 0.5.0 migration
+# @proofmeta/cli — 0.5.0 migration
 
-Thin adapter to `@proofmeta/sdk-ts/acceptance`. This local implementation is not a publication, independent QA pass or operational authorization. Wire 1.0, canonical draft-07 schemas and D16 signing projection are unchanged. Ajv/Spec dependency metadata is retained; CLI decisions no longer compile separate validators.
+Thin adapter to `@proofmeta/sdk-ts/acceptance`. Package version 0.5.0 remains part of the v1 draft and does not declare the ProofMeta protocol v1 released. Wire 1.0, canonical draft-07 schemas and D16 signing projection are unchanged. Ajv/Spec dependency metadata is retained; CLI decisions no longer compile separate validators.
 
 ## Local build
 
