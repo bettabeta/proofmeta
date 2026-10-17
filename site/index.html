@@ -835,7 +835,7 @@ SUSPENDED → REVOKED (terminal)</pre>
       <a class="btn ghost" href="https://github.com/bettabeta/proofmeta-license-contracts" target="_blank" rel="noopener">License Contracts →</a>
     </div>
 
-    <div class="builder-thread-embed ml-form-loading" id="builder-thread-embed">
+    <div class="builder-thread-embed ml-form-loading" id="builder-thread-embed" hidden>
       <div id="mlb2-185530176070747374" class="ml-form-embedContainer ml-form-embedContainer-default"></div>
       <p class="builder-thread-status" id="builder-thread-status" hidden aria-live="polite"></p>
       <p class="hint">Low-volume updates as the spec moves. Nothing else. Unsubscribe in one click.</p>
@@ -843,19 +843,23 @@ SUSPENDED → REVOKED (terminal)</pre>
 
     <script src="mailerlite.config.js"></script>
     <script>
-      (function (w, d, e, u, f, l, n) {
-        w[f] = w[f] || function () { (w[f].q = w[f].q || []).push(arguments); };
-        l = d.createElement(e); l.async = 1; l.src = u;
-        n = d.getElementsByTagName(e)[0]; n.parentNode.insertBefore(l, n);
-      })(window, document, 'script', 'https://assets.mailerlite.com/js/universal.js', 'ml');
-      ml('account', (window.PROOFMETA_MAILERLITE && window.PROOFMETA_MAILERLITE.accountId) || '2287781');
-      ml('forms', (window.PROOFMETA_MAILERLITE && window.PROOFMETA_MAILERLITE.formId) || '185530176070747374');
+      if (window.PROOFMETA_MAILERLITE && window.PROOFMETA_MAILERLITE.enabled) {
+        (function (w, d, e, u, f, l, n) {
+          w[f] = w[f] || function () { (w[f].q = w[f].q || []).push(arguments); };
+          l = d.createElement(e); l.async = 1; l.src = u;
+          n = d.getElementsByTagName(e)[0]; n.parentNode.insertBefore(l, n);
+        })(window, document, 'script', 'https://assets.mailerlite.com/js/universal.js', 'ml');
+        ml('account', (window.PROOFMETA_MAILERLITE && window.PROOFMETA_MAILERLITE.accountId) || '2287781');
+        ml('forms', (window.PROOFMETA_MAILERLITE && window.PROOFMETA_MAILERLITE.formId) || '185530176070747374');
+      }
     </script>
     <script>
       (function () {
         var cfg = window.PROOFMETA_MAILERLITE || {};
-        var FORM_ID = cfg.formId || '185530176070747374';
         var wrap = document.getElementById('builder-thread-embed');
+        if (!cfg.enabled || !wrap) return;
+        wrap.hidden = false;
+        var FORM_ID = cfg.formId || '185530176070747374';
         var status = document.getElementById('builder-thread-status');
         var successMessage = '✓ You\'re on the thread. Check your inbox — confirm the email and you\'re set.';
 
