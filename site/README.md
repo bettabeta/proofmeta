@@ -13,6 +13,11 @@ Static homepage for the ProofMeta Protocol. Deployed on Vercel from this subfold
 ## Files
 
 - `index.html` — homepage (single-file, no build step)
+- `generate/index.html` — Manifest Generator (client-side only; keys never leave the browser)
+- `verify/index.html` — Envelope Verifier (client-side only, fail-closed acceptance checks)
+- `tools/proofmeta-tools.min.js` — generated SDK browser bundle used by both tools.
+  Rebuild with `npm run build && node scripts/build-site-tools.mjs` from the repo root;
+  never edit by hand.
 - `vercel.json` — redirects + security headers
 - `scanner/` — *(to be added)* legacy ProofMeta Scanner, moved here from root
 

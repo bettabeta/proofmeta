@@ -1,0 +1,321 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ProofMeta Verifier — check any Signed Envelope</title>
+<meta name="description" content="Paste or fetch any ProofMeta Signed Envelope and verify it: who signed it, what exactly was signed, and when. Runs entirely in your browser.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0b0b0b;
+    --surface: #151412;
+    --ink: #e8e3d5;
+    --muted: #8a8678;
+    --amber: #d4873c;
+    --green: #7ba05b;
+    --red: #c65b4e;
+    --hairline: rgba(232, 227, 213, 0.12);
+    --mono: 'JetBrains Mono', ui-monospace, 'SF Mono', Menlo, monospace;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--bg); color: var(--ink);
+    font-family: var(--mono); font-size: 15px; line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+  }
+  ::selection { background: var(--amber); color: var(--bg); }
+  a { color: inherit; text-underline-offset: 3px; }
+  a:hover { color: var(--amber); }
+  .wrap { max-width: 860px; margin: 0 auto; padding: 0 24px; }
+  nav.top {
+    border-bottom: 1px solid var(--hairline); padding: 14px 0; font-size: 13px;
+    position: sticky; top: 0; background: rgba(11,11,11,.92);
+    backdrop-filter: blur(8px); z-index: 10;
+  }
+  nav.top .wrap { display: flex; justify-content: space-between; gap: 16px; flex-wrap: wrap; align-items: center; }
+  nav.top a.brand { display: inline-flex; align-items: center; text-decoration: none; line-height: 0; }
+  nav.top .brand-logo { height: 36px; width: auto; display: block; }
+  nav.top .links { display: flex; gap: 20px; color: var(--muted); flex-wrap: wrap; }
+  nav.top .links a { text-decoration: none; }
+  nav.top .links a:hover { color: var(--ink); }
+
+  header { padding: 56px 0 8px; }
+  h1 { font-size: clamp(26px, 4.5vw, 40px); line-height: 1.1; letter-spacing: -0.02em; margin: 0 0 16px; }
+  .lede { color: var(--muted); max-width: 640px; }
+  .lede strong { color: var(--ink); font-weight: 500; }
+
+  section.panel { border: 1px solid var(--hairline); background: var(--surface); border-radius: 8px; padding: 24px; margin: 24px 0; }
+  .tabs { display: flex; gap: 8px; margin-bottom: 16px; flex-wrap: wrap; }
+  .tabs button {
+    font-family: var(--mono); font-size: 13px; cursor: pointer;
+    border-radius: 6px; padding: 7px 14px;
+    border: 1px solid var(--hairline); background: var(--bg); color: var(--muted);
+  }
+  .tabs button.active { border-color: var(--amber); color: var(--amber); }
+
+  textarea, input[type="url"] {
+    width: 100%; background: var(--bg); color: var(--ink);
+    border: 1px solid var(--hairline); border-radius: 6px;
+    font-family: var(--mono); font-size: 13px; padding: 10px 12px;
+  }
+  textarea { min-height: 180px; resize: vertical; white-space: pre; }
+  textarea:focus-visible, input:focus-visible { outline: 2px solid var(--amber); outline-offset: 1px; }
+
+  button.primary {
+    font-family: var(--mono); font-size: 14px; font-weight: 700; cursor: pointer;
+    border-radius: 6px; padding: 10px 20px; margin-top: 14px;
+    background: var(--amber); border: 1px solid var(--amber); color: var(--bg);
+  }
+  button.primary:hover { filter: brightness(1.1); }
+  .hint { color: var(--muted); font-size: 13px; margin-top: 10px; }
+  .err { color: var(--red); font-size: 13px; margin-top: 12px; white-space: pre-wrap; }
+
+  .verdict { display: inline-block; border-radius: 6px; padding: 6px 16px; font-size: 15px; font-weight: 700; margin-bottom: 18px; }
+  .verdict.pass { background: rgba(123,160,91,.15); color: var(--green); border: 1px solid var(--green); }
+  .verdict.fail { background: rgba(198,91,78,.15); color: var(--red); border: 1px solid var(--red); }
+  .verdict.info { background: rgba(212,135,60,.12); color: var(--amber); border: 1px solid var(--amber); }
+
+  table.checks { width: 100%; border-collapse: collapse; font-size: 13px; margin: 6px 0 18px; }
+  table.checks td { border-top: 1px solid var(--hairline); padding: 7px 10px 7px 0; vertical-align: top; }
+  table.checks td:first-child { color: var(--muted); width: 130px; }
+  .s-pass { color: var(--green); }
+  .s-fail { color: var(--red); font-weight: 700; }
+  .s-skip { color: var(--muted); }
+
+  dl.meta { font-size: 13px; margin: 0 0 6px; }
+  dl.meta dt { color: var(--muted); margin-top: 10px; }
+  dl.meta dd { margin: 2px 0 0; word-break: break-all; }
+
+  .chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 4px; }
+  .chip { border: 1px solid var(--hairline); border-radius: 999px; padding: 1px 10px; font-size: 12px; color: var(--ink); }
+  .chip.g { border-color: var(--green); color: var(--green); }
+  .chip.r { border-color: var(--red); color: var(--red); }
+  .chip.u { border-color: var(--amber); color: var(--amber); }
+
+  .lic-block { border: 1px solid var(--hairline); border-radius: 6px; padding: 12px 14px; margin: 10px 0; font-size: 13px; }
+  .lic-block .lid { color: var(--amber); font-weight: 700; }
+  .lic-block a { color: var(--muted); }
+
+  .errors-list { font-size: 13px; color: var(--red); margin: 0 0 16px; padding-left: 18px; }
+  footer { border-top: 1px solid var(--hairline); margin-top: 64px; padding: 28px 0 48px; color: var(--muted); font-size: 13px; }
+  .hidden { display: none !important; }
+</style>
+</head>
+<body>
+<nav class="top">
+  <div class="wrap">
+    <a class="brand" href="/"><img class="brand-logo" src="/assets/proofmeta-logo.png" alt="ProofMeta"></a>
+    <div class="links">
+      <a href="/generate">Generator</a>
+      <a href="https://github.com/bettabeta/proofmeta-primitive-core" rel="noopener">GitHub</a>
+    </div>
+  </div>
+</nav>
+
+<header class="wrap">
+  <h1>Verifier</h1>
+  <p class="lede">Check any ProofMeta Signed Envelope: <strong>who</strong> signed it, <strong>what</strong> exactly was signed, <strong>when</strong>. Verification runs entirely in your browser against the protocol's fail-closed acceptance rules — nothing is uploaded anywhere.</p>
+</header>
+
+<main class="wrap">
+
+  <section class="panel">
+    <div class="tabs">
+      <button id="tab-paste" class="active">Paste JSON</button>
+      <button id="tab-url">Fetch URL</button>
+      <button id="tab-file">Upload file</button>
+    </div>
+    <div id="in-paste">
+      <textarea id="input-json" spellcheck="false" placeholder='{"proofmeta":"1.0","payload":{…},"payload_hash":"sha256:…","author":"did:key:…","signature":"ed25519:…","timestamp":"…"}'></textarea>
+    </div>
+    <div id="in-url" class="hidden">
+      <input type="url" id="input-url" placeholder="https://example.com/.well-known/proofmeta.json">
+      <p class="hint">The target server must allow cross-origin reads (CORS). If the fetch fails, download the file and use the upload tab instead.</p>
+    </div>
+    <div id="in-file" class="hidden">
+      <input type="file" id="input-file" accept=".json,application/json">
+      <p class="hint">Files and URLs are verified byte-exact — including the UTF-8 / no-BOM transport rules a pasted string can't carry.</p>
+    </div>
+    <button id="btn-verify" class="primary">Verify</button>
+    <div id="verify-err" class="err hidden"></div>
+  </section>
+
+  <section class="panel hidden" id="report-panel">
+    <div id="report-verdict"></div>
+    <ul id="report-errors" class="errors-list hidden"></ul>
+    <table class="checks" id="report-checks"></table>
+    <dl class="meta" id="report-meta"></dl>
+    <div id="report-manifest"></div>
+  </section>
+
+</main>
+
+<footer>
+  <div class="wrap">
+    ProofMeta Protocol — open, Apache-2.0, chain-agnostic. <a href="https://github.com/bettabeta/proofmeta-primitive-core" rel="noopener">Spec &amp; SDK on GitHub</a>. Create your own manifest with the <a href="/generate">Generator</a>.
+  </div>
+</footer>
+
+<script src="/tools/proofmeta-tools.min.js"></script>
+<script>
+(() => {
+  "use strict";
+  const $ = (id) => document.getElementById(id);
+  const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+  const CORE_SCOPES = new Set(["commercial","non-commercial","derivative-allowed","attribution-required","ai-training-allowed","ai-training-excluded","sublicense-allowed","revocable"]);
+
+  // ── Tabs ──────────────────────────────────────────────────────────────
+  let mode = "paste";
+  const tabs = { paste: $("tab-paste"), url: $("tab-url"), file: $("tab-file") };
+  const panes = { paste: $("in-paste"), url: $("in-url"), file: $("in-file") };
+  for (const [name, el] of Object.entries(tabs)) {
+    el.addEventListener("click", () => {
+      mode = name;
+      for (const n of Object.keys(tabs)) {
+        tabs[n].classList.toggle("active", n === name);
+        panes[n].classList.toggle("hidden", n !== name);
+      }
+    });
+  }
+
+  // ── Input acquisition ─────────────────────────────────────────────────
+  async function getBytes() {
+    if (mode === "paste") {
+      const text = $("input-json").value;
+      if (!text.trim()) throw new Error("Paste an envelope first.");
+      return new TextEncoder().encode(text);
+    }
+    if (mode === "url") {
+      const url = $("input-url").value.trim();
+      if (!url) throw new Error("Enter a URL first.");
+      let res;
+      try { res = await fetch(url, { redirect: "follow" }); }
+      catch { throw new Error("Fetch failed — most likely the server does not send an Access-Control-Allow-Origin header (CORS), or the URL is unreachable. Download the file and use the upload tab instead. Site owners: see the CORS snippets in the Generator, step 5."); }
+      if (!res.ok) throw new Error(`Fetch failed: HTTP ${res.status}`);
+      return new Uint8Array(await res.arrayBuffer());
+    }
+    const file = $("input-file").files[0];
+    if (!file) throw new Error("Choose a file first.");
+    return new Uint8Array(await file.arrayBuffer());
+  }
+
+  // ── Verify ────────────────────────────────────────────────────────────
+  $("btn-verify").addEventListener("click", run);
+  async function run() {
+    $("verify-err").classList.add("hidden");
+    $("report-panel").classList.add("hidden");
+    let bytes;
+    try { bytes = await getBytes(); }
+    catch (e) { $("verify-err").textContent = e.message; $("verify-err").classList.remove("hidden"); return; }
+
+    // First pass: pure integrity inspection — works for any payload type.
+    const inspect = await ProofMeta.acceptProtocolInput(
+      { kind: "bytes", bytes },
+      { operation: "inspect-envelope", purpose: "inspection" },
+    );
+
+    // If it's a manifest, the protocol defines a full conformance verdict.
+    const isManifest = inspect.snapshot && typeof inspect.snapshot === "object"
+      && !Array.isArray(inspect.snapshot)
+      && inspect.snapshot.payload && inspect.snapshot.payload.type === "manifest";
+    const report = isManifest
+      ? await ProofMeta.acceptProtocolInput({ kind: "bytes", bytes }, { operation: "manifest", purpose: "protocol-conformance" })
+      : inspect;
+
+    render(report, isManifest);
+  }
+
+  function render(report, isManifest) {
+    const failed = report.errors.length > 0;
+    const v = $("report-verdict");
+    if (isManifest) {
+      v.className = report.accepted ? "verdict pass" : "verdict fail";
+      v.textContent = report.accepted
+        ? "✓ VALID MANIFEST — signature, hash, schema and scope all check out"
+        : "✗ REJECTED — this manifest does not verify";
+    } else if (failed) {
+      v.className = "verdict fail";
+      v.textContent = "✗ REJECTED — this envelope does not verify";
+    } else {
+      v.className = "verdict info";
+      v.textContent = "◆ ENVELOPE INTEGRITY OK — signature, hash and schema verified (no lifecycle context checked)";
+    }
+
+    const errUl = $("report-errors");
+    errUl.innerHTML = "";
+    errUl.classList.toggle("hidden", !failed);
+    for (const e of report.errors) {
+      const li = document.createElement("li");
+      li.textContent = `${e.code} at ${e.path || "/"}` + (e.position !== undefined ? ` (position ${e.position})` : "");
+      errUl.appendChild(li);
+    }
+
+    const LABELS = {
+      ingress: "transport", schema: "schema", hash: "payload hash",
+      signature: "signature", authority: "authority", context: "context", policy: "policy",
+    };
+    const SYMBOL = { pass: ["✓ pass", "s-pass"], fail: ["✗ fail", "s-fail"], "not-checked": ["— not checked", "s-skip"], "not-applicable": ["— n/a", "s-skip"] };
+    const rows = Object.entries(report.checks).map(([k, s]) => {
+      const [txt, cls] = SYMBOL[s];
+      return `<tr><td>${LABELS[k] || k}</td><td class="${cls}">${txt}</td></tr>`;
+    });
+    $("report-checks").innerHTML = rows.join("");
+
+    const meta = $("report-meta");
+    meta.innerHTML = "";
+    const env = report.snapshot;
+    if (env && typeof env === "object" && !Array.isArray(env)) {
+      const dd = (dt, val) => { if (val !== undefined) meta.innerHTML += `<dt>${dt}</dt><dd>${esc(val)}</dd>`; };
+      dd("who — author", env.author);
+      dd("when — signed at", env.timestamp);
+      dd("what — payload type", env.payload && env.payload.type);
+      dd("payload hash", env.payload_hash);
+      if (env.in_reply_to) dd("in reply to", env.in_reply_to);
+    }
+
+    const m = $("report-manifest");
+    m.innerHTML = "";
+    if (isManifest && env && env.payload) {
+      const p = env.payload;
+      let html = "";
+      if (p.provider) {
+        html += `<dl class="meta"><dt>provider</dt><dd>${esc(p.provider.name || "")}${p.provider.name ? " — " : ""}${esc(p.provider.id || "")}</dd>`;
+        html += `<dt>request endpoint</dt><dd>${esc(p.request_endpoint || "")}</dd>`;
+        if (p.catalog_endpoint) html += `<dt>catalog endpoint</dt><dd>${esc(p.catalog_endpoint)}</dd>`;
+        if (Array.isArray(p.items)) html += `<dt>inline items</dt><dd>${p.items.length}</dd>`;
+        html += `</dl>`;
+      }
+      for (const lt of Array.isArray(p.license_types) ? p.license_types : []) {
+        const chips = (Array.isArray(lt.scope) ? lt.scope : []).map((tag) => {
+          const cls = tag === "ai-training-excluded" || tag === "non-commercial" ? "r"
+            : CORE_SCOPES.has(tag) ? "g" : "u";
+          return `<span class="chip ${cls}">${esc(tag)}</span>`;
+        }).join("");
+        html += `<div class="lic-block">
+          <span class="lid">${esc(lt.id)}</span>${lt.name ? " · " + esc(lt.name) : ""}
+          ${lt.price_hint ? ` · ${esc(lt.price_hint.amount)} ${esc(lt.price_hint.currency)}` : ""}<br>
+          <a href="${esc(lt.terms_url)}" rel="noopener nofollow">${esc(lt.terms_url)}</a>
+          <div class="chips">${chips}</div>
+        </div>`;
+      }
+      m.innerHTML = html;
+    }
+
+    $("report-panel").classList.remove("hidden");
+    $("report-panel").scrollIntoView({ behavior: "smooth", block: "nearest" });
+  }
+
+  // ── ?url= deep link ───────────────────────────────────────────────────
+  const qurl = new URLSearchParams(location.search).get("url");
+  if (qurl) {
+    tabs.url.click();
+    $("input-url").value = qurl;
+    run();
+  }
+})();
+</script>
+</body>
+</html>
