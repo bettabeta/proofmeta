@@ -1,0 +1,4 @@
+dist/
+node_modules/
+vendor/*.tgz
+package-lock.json
