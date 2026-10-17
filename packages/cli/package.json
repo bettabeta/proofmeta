@@ -35,12 +35,12 @@
   ],
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/bettabeta/proofmeta-primitive-core.git",
+    "url": "git+https://github.com/bettabeta/proofmeta.git",
     "directory": "packages/cli"
   },
-  "homepage": "https://github.com/bettabeta/proofmeta-primitive-core#readme",
+  "homepage": "https://github.com/bettabeta/proofmeta#readme",
   "bugs": {
-    "url": "https://github.com/bettabeta/proofmeta-primitive-core/issues"
+    "url": "https://github.com/bettabeta/proofmeta/issues"
   },
   "publishConfig": {
     "access": "public"

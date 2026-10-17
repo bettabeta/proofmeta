@@ -39,7 +39,7 @@
         ],
         "content_hash": "sha256:c15d36af6b6c14b9c1c6a91c5c34b1e585c3d5662838c6dc551ac5c0f0d19937",
         "metadata": {
-          "url": "https://raw.githubusercontent.com/bettabeta/proofmeta-primitive-core/b59a3f3b314cc0c78fddeb07c8502d209a8f6109/PROOFMETA_ANWEISUNG.md"
+          "url": "https://raw.githubusercontent.com/bettabeta/proofmeta/83681ebfbd7a8771836456345787a74960131b89/PROOFMETA_ANWEISUNG.md"
         }
       },
       {
@@ -56,8 +56,8 @@
       }
     ]
   },
-  "payload_hash": "sha256:3d6cf051f17013f6a74fbc0b808aff2922eb5fce63a1d6484de5bc813ac5ebdb",
+  "payload_hash": "sha256:f05923d5699c19c19db0b34c0403ef80d441d8288fe1d2f18b34423e4595edc7",
   "author": "did:key:z6MkrtrapcdcSupViKJJ6v7AuFoatyED7zSJkF7YVj4g4oQR",
-  "signature": "ed25519:e57cefc5959967fbf0f8ab8dbed35365a734580ca7e476345e4413823073f10d117b7a99d441a48a9403bdd41eb9e4c2ff29a87a9a17db11e76805c5dc120a0a",
-  "timestamp": "2026-10-17T13:13:01.928Z"
+  "signature": "ed25519:1e5d57d8d28b7c8485d472f39434dbee1d9bc57c7665268e350b2cfb93f7d900daf5566e11db59a6002cb231d2d7e869b5dd7680d0e9904f1327f101bf0ea906",
+  "timestamp": "2026-10-17T13:54:37.566Z"
 }
