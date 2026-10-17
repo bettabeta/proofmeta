@@ -110,6 +110,7 @@
   .verdict.fail { background: rgba(198,91,78,.15); color: var(--red); border: 1px solid var(--red); }
 
   .hosting { border-left: 2px solid var(--amber); padding: 2px 0 2px 16px; margin: 18px 0; font-size: 13px; color: var(--muted); }
+  .hosting pre.snippet { background: var(--bg); border: 1px solid var(--hairline); border-radius: 6px; padding: 12px; font-size: 12px; color: var(--ink); overflow-x: auto; margin-top: 8px; }
   .hosting code { color: var(--ink); background: var(--bg); padding: 1px 5px; border-radius: 4px; border: 1px solid var(--hairline); }
 
   footer { border-top: 1px solid var(--hairline); margin-top: 64px; padding: 28px 0 48px; color: var(--muted); font-size: 13px; }
@@ -212,6 +213,28 @@
         <p><strong style="color:var(--ink)">Publish it:</strong> upload the file to your domain at</p>
         <p><code>https://yourdomain.com/.well-known/proofmeta.json</code></p>
         <p>served as <code>Content-Type: application/json</code>, UTF-8, no byte-order mark. That's it — any agent can now discover and verify your terms.</p>
+        <p><strong style="color:var(--ink)">Recommended:</strong> allow cross-origin reads, so browser-based tools (like the <a href="/verify">Verifier</a>) can fetch the file:</p>
+        <details class="helper">
+          <summary>CORS snippets — nginx · Apache · Vercel · Netlify / Cloudflare Pages</summary>
+<pre class="snippet"># nginx
+location = /.well-known/proofmeta.json {
+    default_type application/json;
+    add_header Access-Control-Allow-Origin "*";
+}
+
+# Apache (.htaccess)
+&lt;Files "proofmeta.json"&gt;
+    Header set Access-Control-Allow-Origin "*"
+&lt;/Files&gt;
+
+# Vercel (vercel.json → "headers")
+{ "source": "/.well-known/proofmeta.json",
+  "headers": [{ "key": "Access-Control-Allow-Origin", "value": "*" }] }
+
+# Netlify / Cloudflare Pages (_headers)
+/.well-known/proofmeta.json
+  Access-Control-Allow-Origin: *</pre>
+        </details>
       </div>
     </div>
   </section>

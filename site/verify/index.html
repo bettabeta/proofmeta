@@ -193,7 +193,7 @@
       if (!url) throw new Error("Enter a URL first.");
       let res;
       try { res = await fetch(url, { redirect: "follow" }); }
-      catch { throw new Error("Fetch failed — likely a CORS restriction or network error. Download the file and use the upload tab."); }
+      catch { throw new Error("Fetch failed — most likely the server does not send an Access-Control-Allow-Origin header (CORS), or the URL is unreachable. Download the file and use the upload tab instead. Site owners: see the CORS snippets in the Generator, step 5."); }
       if (!res.ok) throw new Error(`Fetch failed: HTTP ${res.status}`);
       return new Uint8Array(await res.arrayBuffer());
     }
