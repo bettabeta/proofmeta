@@ -33,16 +33,17 @@ envelope.schema.json  ──  payload ────┬──  payload.manifest.sc
 | `envelope.schema.json` | Outer wrapper — required for every artifact. Defines `proofmeta`, `payload`, `payload_hash`, `author`, `signature`, `timestamp`, optional `in_reply_to`, `anchors`. |
 | `payload.manifest.schema.json` | Provider License Manifest payload (published at `/.well-known/proofmeta.json`). |
 | `payload.license-request.schema.json` | Consumer-signed OPEN envelope that starts a license lifecycle. |
-| `payload.status-update.schema.json` | PENDING / GRANTED / DENIED / SUSPENDED / REVOKED envelopes signed by Provider (or Resolver, for PENDING). |
+| `payload.status-update.schema.json` | PENDING / GRANTED / DENIED / SUSPENDED / REVOKED envelopes. In a license chain every `status.update` — including PENDING — is signed by the Provider (the root OPEN's `provider_id`); resolver-authored license statuses are rejected (D18). Root attestations (Mode B) are signed by their asserting authority. |
 
 ## Validation procedure
 
 1. Validate the outer object against `envelope.schema.json`.
 2. Read `payload.type` and validate `payload` against the matching payload schema.
 3. Recompute `payload_hash` from the JCS (RFC 8785) canonicalization of `payload` and verify it matches.
-4. Verify `signature` against `payload_hash` using the public key resolved from `author`.
-5. If `in_reply_to` is present, verify that the referenced envelope exists and is the logical predecessor for this payload type (see §3.4).
-6. For scope semantics in manifest payloads, see [`docs/scope-vocabulary.md`](https://github.com/bettabeta/proofmeta/blob/main/docs/scope-vocabulary.md).
+4. Verify `signature` over the JCS signing projection of `proofmeta`, `payload_hash`, `author`, `timestamp`, and `in_reply_to` when present (D16, §3.1.1), using the public key resolved from `author`. A legacy payload-hash-only signature MUST NOT verify as valid.
+5. Enforce the v1 actor rules (D18, §3.4): Manifest `author` equals `payload.provider.id`; OPEN `author` equals `payload.consumer.id`; every license-chain `status.update` author equals the root OPEN's `provider_id`.
+6. If `in_reply_to` is present, verify that the referenced envelope exists and is the logical predecessor for this payload type (see §3.4).
+7. For scope semantics in manifest payloads, see [`docs/scope-vocabulary.md`](https://github.com/bettabeta/proofmeta/blob/main/docs/scope-vocabulary.md).
 
 Schemas are draft-07. The `$id` URLs are stable references; they are not required to resolve during validation.
 
