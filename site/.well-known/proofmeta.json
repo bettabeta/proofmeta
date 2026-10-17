@@ -1,0 +1,63 @@
+{
+  "proofmeta": "1.0",
+  "payload": {
+    "type": "manifest",
+    "provider": {
+      "id": "did:key:z6MkrtrapcdcSupViKJJ6v7AuFoatyED7zSJkF7YVj4g4oQR",
+      "name": "ProofMeta — Pandr UG (haftungsbeschränkt)",
+      "description": "The ProofMeta protocol project itself: specification, JSON schemas, reference SDK and browser tools."
+    },
+    "request_endpoint": "https://proofmeta.com/requests",
+    "resolvers": [
+      {
+        "role": "delivery",
+        "id": "https"
+      }
+    ],
+    "license_types": [
+      {
+        "id": "apache-2.0",
+        "name": "Apache License 2.0",
+        "terms_url": "https://proofmeta.com/license.txt",
+        "terms_hash": "sha256:97b06d58c91b3c78c83fce8492647ae42cb74d6247dd4c00da940a8bae4a2630",
+        "scope": [
+          "commercial",
+          "derivative-allowed",
+          "attribution-required",
+          "sublicense-allowed",
+          "ai-training-allowed"
+        ]
+      }
+    ],
+    "items": [
+      {
+        "item_id": "protocol-specification",
+        "name": "ProofMeta Protocol Specification",
+        "description": "PROOFMETA_ANWEISUNG.md — the master specification of the ProofMeta protocol.",
+        "available_licenses": [
+          "apache-2.0"
+        ],
+        "content_hash": "sha256:c15d36af6b6c14b9c1c6a91c5c34b1e585c3d5662838c6dc551ac5c0f0d19937",
+        "metadata": {
+          "url": "https://raw.githubusercontent.com/bettabeta/proofmeta-primitive-core/b59a3f3b314cc0c78fddeb07c8502d209a8f6109/PROOFMETA_ANWEISUNG.md"
+        }
+      },
+      {
+        "item_id": "browser-tools-bundle",
+        "name": "ProofMeta browser tools bundle",
+        "description": "proofmeta-tools.min.js — the client-side SDK bundle powering the manifest generator and verifier.",
+        "available_licenses": [
+          "apache-2.0"
+        ],
+        "content_hash": "sha256:a4db870afc46535311091170aa30c626943d963bb36ed9830eece78c7629d007",
+        "metadata": {
+          "url": "https://proofmeta.com/tools/proofmeta-tools.min.js"
+        }
+      }
+    ]
+  },
+  "payload_hash": "sha256:3d6cf051f17013f6a74fbc0b808aff2922eb5fce63a1d6484de5bc813ac5ebdb",
+  "author": "did:key:z6MkrtrapcdcSupViKJJ6v7AuFoatyED7zSJkF7YVj4g4oQR",
+  "signature": "ed25519:e57cefc5959967fbf0f8ab8dbed35365a734580ca7e476345e4413823073f10d117b7a99d441a48a9403bdd41eb9e4c2ff29a87a9a17db11e76805c5dc120a0a",
+  "timestamp": "2026-10-17T13:13:01.928Z"
+}

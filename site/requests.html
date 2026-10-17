@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ProofMeta — license requests</title>
+<meta name="description" content="How to send a license request to proofmeta.com. Everything this site offers is Apache-2.0 licensed — no request is required.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0b0b0b;
+    --surface: #151412;
+    --ink: #e8e3d5;
+    --muted: #8a8678;
+    --amber: #d4873c;
+    --hairline: rgba(232, 227, 213, 0.12);
+    --mono: 'JetBrains Mono', ui-monospace, 'SF Mono', Menlo, monospace;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--bg); color: var(--ink);
+    font-family: var(--mono); font-size: 15px; line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+  }
+  ::selection { background: var(--amber); color: var(--bg); }
+  a { color: inherit; text-underline-offset: 3px; }
+  a:hover { color: var(--amber); }
+  .wrap { max-width: 860px; margin: 0 auto; padding: 0 24px; }
+  nav.top {
+    border-bottom: 1px solid var(--hairline); padding: 14px 0; font-size: 13px;
+  }
+  nav.top .wrap { display: flex; justify-content: space-between; gap: 16px; flex-wrap: wrap; align-items: center; }
+  nav.top a.brand { display: inline-flex; align-items: center; text-decoration: none; line-height: 0; }
+  nav.top .brand-logo { height: 36px; width: auto; display: block; }
+  nav.top .links { display: flex; gap: 20px; color: var(--muted); flex-wrap: wrap; }
+  nav.top .links a { text-decoration: none; }
+  nav.top .links a:hover { color: var(--ink); }
+  header { padding: 56px 0 8px; }
+  h1 { font-size: clamp(26px, 4.5vw, 40px); line-height: 1.1; letter-spacing: -0.02em; margin: 0 0 16px; }
+  section.panel { border: 1px solid var(--hairline); background: var(--surface); border-radius: 8px; padding: 24px; margin: 24px 0; font-size: 14px; }
+  section.panel p { margin: 0 0 14px; }
+  section.panel p:last-child { margin-bottom: 0; }
+  code { background: var(--bg); padding: 1px 5px; border-radius: 4px; border: 1px solid var(--hairline); font-size: 13px; }
+  .muted { color: var(--muted); }
+  footer { border-top: 1px solid var(--hairline); margin-top: 64px; padding: 28px 0 48px; color: var(--muted); font-size: 13px; }
+</style>
+</head>
+<body>
+<nav class="top">
+  <div class="wrap">
+    <a class="brand" href="/"><img class="brand-logo" src="/assets/proofmeta-logo.png" alt="ProofMeta"></a>
+    <div class="links">
+      <a href="/generate">Generator</a>
+      <a href="/verify">Verifier</a>
+      <a href="https://github.com/bettabeta/proofmeta-primitive-core" rel="noopener">GitHub</a>
+    </div>
+  </div>
+</nav>
+
+<header class="wrap">
+  <h1>License requests</h1>
+</header>
+
+<main class="wrap">
+  <section class="panel">
+    <p>This URL is the <code>request_endpoint</code> declared in <a href="/verify?url=/.well-known/proofmeta.json">this site's signed manifest</a>.</p>
+    <p>Everything proofmeta.com offers — the protocol specification, schemas, SDK and browser tools — is licensed under <strong>Apache&nbsp;2.0</strong>. <strong>No license request is required.</strong> Use it, fork it, build on it; keep the attribution in the <a href="https://github.com/bettabeta/proofmeta-primitive-core/blob/main/NOTICE" rel="noopener">NOTICE</a> file.</p>
+    <p>There is no automated request endpoint here yet. To reach the maintainers, open an issue on <a href="https://github.com/bettabeta/proofmeta-primitive-core/issues" rel="noopener">GitHub</a>.</p>
+    <p class="muted">When an automated endpoint ships, it will accept signed <code>OPEN</code> envelopes at this URL — the manifest will be re-issued then.</p>
+  </section>
+</main>
+
+<footer>
+  <div class="wrap">
+    ProofMeta Protocol — open, Apache-2.0, chain-agnostic.
+  </div>
+</footer>
+</body>
+</html>
