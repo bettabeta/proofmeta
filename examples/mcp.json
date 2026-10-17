@@ -1,0 +1,12 @@
+{
+  "mcpServers": {
+    "proofmeta": {
+      "command": "node",
+      "args": ["/absolute/path/to/proofmeta-mcp/dist/cli.js"],
+      "env": {
+        "PROOFMETA_MCP_TIMEOUT_MS": "10000",
+        "PROOFMETA_MCP_MAX_BYTES": "1048576"
+      }
+    }
+  }
+}

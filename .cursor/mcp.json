@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "proofmeta": {
+      "command": "node",
+      "args": ["${workspaceFolder}/dist/cli.js"]
+    }
+  }
+}
