@@ -25,7 +25,7 @@ The original candidate pin above is retained, not redefined. Publication changes
 
 ## Working in Cursor
 
-Open the repository root on the approved development branch. Read `.cursorrules`, `AGENTS.md`, and `PROOFMETA_ANWEISUNG.md` before changing anything. The master remains authoritative; schema or protocol changes require explicit authorization. Core stays generic; `policy.scope` remains unresolved and outside B1.
+Open the repository root on the approved development branch. Read `.cursorrules`, `AGENTS.md`, and `SPEC.md` before changing anything. The master remains authoritative; schema or protocol changes require explicit authorization. Core stays generic; `policy.scope` remains unresolved and outside B1.
 
 The candidate contains SDK/CLI acceptance and JSON/JCS hardening, provider/consumer integration, owned E2E readiness/cleanup, packaging/legal distribution changes, and cumulative regression fixtures. Preserve its pinned versions and lockfile: this handoff adds no new version bump or dependency change.
 

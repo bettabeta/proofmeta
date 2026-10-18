@@ -1,9 +1,9 @@
 # Proposal — Policy Attestations (rootable status)
 
-**Status:** Accepted & merged to `main` (2026-06-21, via `feat/policy-attestations`; freeze window from `MILESTONE-SCOPE-FREEZE.md` has elapsed). Decision recorded as D14 in `PROOFMETA_ANWEISUNG.md` §10; spec text in §3.4.1. Full test suite green: licensing behaviour unchanged, backward-compat proven. Phases 1–3 done; Phase 4 (agent-xray emits attestations) is downstream in the agent-xray repo.
+**Status:** Accepted & merged to `main` (2026-06-21, via `feat/policy-attestations`; freeze window from `MILESTONE-SCOPE-FREEZE.md` has elapsed). Decision recorded as D14 in `SPEC.md` §10; spec text in §3.4.1. Full test suite green: licensing behaviour unchanged, backward-compat proven. Phases 1–3 done; Phase 4 (agent-xray emits attestations) is downstream in the agent-xray repo.
 **Date:** 2026-06-21
 **Owner:** Pandr UG / ProofMeta
-**Proposed decision entry:** D14 (see §10 of [`PROOFMETA_ANWEISUNG.md`](../PROOFMETA_ANWEISUNG.md))
+**Proposed decision entry:** D14 (see §10 of [`SPEC.md`](../SPEC.md))
 **Version impact:** Additive → **v1.1** (minor bump). No breaking change.
 
 ---
@@ -23,7 +23,7 @@ This is the same shape — **rulebook + signed verdict with history** — and ne
 | | Change |
 |---|---|
 | **`payload.status-update.schema.json`** | `request_id` moves out of top-level `required`; add `subject` + `policy` properties; add a `oneOf` that makes a status **either** a chained licensing verdict (`request_id`) **or** a root attestation (`subject` + `policy`), never both. |
-| **Spec prose** (`PROOFMETA_ANWEISUNG.md` §3.4) | Document the two status *modes*: *chained verdict* (existing) and *root attestation* (new). |
+| **Spec prose** (`SPEC.md` §3.4) | Document the two status *modes*: *chained verdict* (existing) and *root attestation* (new). |
 | **SDK** (`lifecycle.ts`, Phase 2) | Additive branch: a status MAY be a root when it carries `subject` and no `in_reply_to`. Existing OPEN→…→status logic untouched. New helper `createAttestation()`. |
 | **CLI** (Phase 3) | Accepts attestations automatically once the schema is updated. |
 | **NOT touched** | `envelope.schema.json`, `payload.manifest.schema.json`, `payload.license-request.schema.json`, DID/ed25519, JCS hashing, the core scope vocabulary. |

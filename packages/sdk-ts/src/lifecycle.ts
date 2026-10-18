@@ -3,7 +3,7 @@
 
 /**
  * License status lifecycle — transitions, current status, and validity-over-time.
- * See PROOFMETA_ANWEISUNG.md §3.4.
+ * See SPEC.md §3.4.
  */
 
 import type { AnyPayload, Envelope, ProofMetaStatus, Sha256Ref } from "./types.js";

@@ -1,7 +1,7 @@
 # Terminology
 
 Shared vocabulary for ProofMeta. Normative meanings live in
-`PROOFMETA_ANWEISUNG.md`; this is the quick reference.
+`SPEC.md`; this is the quick reference.
 
 ## Core artifacts
 
