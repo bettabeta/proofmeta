@@ -11,6 +11,6 @@
     "test": "node --test test/*.test.mjs"
   },
   "dependencies": {
-    "@proofmeta/sdk-ts": "^0.5.0"
+    "@proofmeta/sdk-ts": "^0.6.0"
   }
 }

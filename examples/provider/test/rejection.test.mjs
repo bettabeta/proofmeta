@@ -449,7 +449,8 @@ for (const [name, code, overrides = {}, options = {}] of rawCases) {
     if (payload.request_id === undefined) delete payload.request_id;
     const signed = await createEnvelope({ payload, author: consumer.did,
       privateKey: consumer.privateKey, ...options });
-    assert.equal((await verifyEnvelope(signed)).ok, name === "authors" ? false : true);
+    const cryptoOk = name !== "authors" && name !== "timestamp-nonUTC" && name !== "timestamp-negative-zero";
+    assert.equal((await verifyEnvelope(signed)).ok, cryptoOk);
     let bytes = Buffer.from(JSON.stringify(signed));
     if (name === "invalidUTF8") bytes = Buffer.concat([bytes, Buffer.from([0xc3, 0x28])]);
     if (name === "BOM") bytes = Buffer.concat([Buffer.from([0xef, 0xbb, 0xbf]), bytes]);
