@@ -1,10 +1,10 @@
 # @proofmeta/cli — 0.5.0 migration
 
-Thin adapter to `@proofmeta/sdk-ts/acceptance`. Package version 0.5.0 remains part of the v1 draft and does not declare the ProofMeta protocol v1 released. Wire 1.0, canonical draft-07 schemas and D16 signing projection are unchanged. Ajv/Spec dependency metadata is retained; CLI decisions no longer compile separate validators.
+Thin adapter to `@proofmeta/sdk-ts/acceptance`. Package version 0.5.0 implements the v1 draft; it does not declare the ProofMeta protocol v1 released. Wire 1.0, canonical draft-07 schemas and D16 signing projection are unchanged. Ajv/Spec dependency metadata is retained; CLI decisions no longer compile separate validators.
 
 ## Local build
 
-From the monorepo root, with the approved checkout/lock:
+From the monorepo root of a fresh clone:
 
 ```sh
 node scripts/version-p1-install-smoke.mjs --preinstall
@@ -14,7 +14,7 @@ npm run build
 node packages/cli/bin/proofmeta.mjs --help
 ```
 
-PRE/POST admit only the pinned graph. They are not a hostile-checkout/TOCTOU sandbox, nor a generic global-install/npx guarantee. Independent QA, Version-P2 packaging/runtime and release gates remain open. Node 18 needs `--experimental-global-webcrypto` for cryptographic commands.
+PRE/POST admit only the pinned graph. They are not a hostile-checkout/TOCTOU sandbox, nor a generic global-install/npx guarantee; see [docs/SUPPLY-CHAIN.md](../../docs/SUPPLY-CHAIN.md). Node 18 needs `NODE_OPTIONS=--experimental-global-webcrypto` for cryptographic commands.
 
 ## `accept`: explicit operation, purpose and evidence
 

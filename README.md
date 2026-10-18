@@ -6,6 +6,8 @@
 [![Status: v1 Draft](https://img.shields.io/badge/Status-v1_Draft-yellow)]()
 [![CI](https://github.com/bettabeta/proofmeta/actions/workflows/ci.yml/badge.svg)](https://github.com/bettabeta/proofmeta/actions/workflows/ci.yml)
 
+**Status:** v1 draft. `free-attribution` licensing runs end to end; a payment resolver is planned for v1.1.
+
 [Website](https://www.proofmeta.com/) · [Manifest Generator](https://www.proofmeta.com/generate) · [Verifier](https://www.proofmeta.com/verify) · [Specification](./SPEC.md)
 
 ---
@@ -105,23 +107,15 @@ The resolver that ships here is the free resolver. A `payment` entry in a manife
 
 ## Install
 
-Published packages, from npm:
+From npm:
 
 ```sh
 npm install @proofmeta/sdk-ts
 ```
 
-`@proofmeta/sdk-ts`, `@proofmeta/spec`, `@proofmeta/cli`, and `@proofmeta/resolver-free` are on npm at **0.2.0**. This repository is ahead of that (SDK and CLI 0.5.0, spec 0.4.0, free resolver 0.3.0). Those versions are not published. Release approval for them is still open.
+Current npm versions: `@proofmeta/sdk-ts` 0.5.0, `@proofmeta/cli` 0.5.0, `@proofmeta/spec` 0.4.0, `@proofmeta/resolver-free` 0.3.0.
 
-A checkout of this repository uses a pinned local install. From the repo root:
-
-```sh
-node scripts/version-p1-install-smoke.mjs --preinstall &&
-  npm ci --ignore-scripts --no-audit &&
-  node scripts/version-p1-install-smoke.mjs
-```
-
-Build, test, and the trust limits of that sequence: [docs/INSTALL.md](./docs/INSTALL.md).
+To build, test, and run the reference provider, consumer, and CLI from a checkout: [docs/INSTALL.md](./docs/INSTALL.md).
 
 ## Repository structure
 
@@ -148,7 +142,7 @@ This is a working v1 draft. A provider can publish a manifest, a consumer can re
 - [x] Demo provider and consumer
 - [x] Validator CLI (`proofmeta validate <file>`)
 
-Still open: publishing this draft at a canonical spec domain, and release approval for the versions in this tree. Planned for v1.1: one payment resolver. Until that ships, the runnable license is `free-attribution`.
+Planned for v1.1: one payment resolver. Until that ships, the runnable license is `free-attribution`.
 
 ## License
 
