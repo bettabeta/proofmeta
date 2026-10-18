@@ -1,6 +1,6 @@
 # ProofMeta v0.4.0 test-vector corpus
 
-This directory is the language-neutral conformance corpus for the v0.4.0 envelope-authenticity (D16) and lifecycle-authority (D18) rules in `PROOFMETA_ANWEISUNG.md`.
+This directory is the language-neutral conformance corpus for the v0.4.0 envelope-authenticity (D16) and lifecycle-authority (D18) rules in `SPEC.md`.
 
 > **WARNING — TEST KEYS ONLY:** `keys.json` contains public deterministic private Ed25519 seeds. Never use these keys for production, identity, value, secrets, or any non-test purpose.
 

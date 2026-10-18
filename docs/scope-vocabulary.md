@@ -1,6 +1,6 @@
 # Scope Vocabulary
 
-Normative reference for the `license_types[].scope` field of a ProofMeta License Manifest (see §3.3 of [`PROOFMETA_ANWEISUNG.md`](../PROOFMETA_ANWEISUNG.md)).
+Normative reference for the `license_types[].scope` field of a ProofMeta License Manifest (see §3.3 of [`SPEC.md`](../SPEC.md)).
 
 ## Why a vocabulary exists
 

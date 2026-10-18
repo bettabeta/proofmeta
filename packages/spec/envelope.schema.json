@@ -2,7 +2,7 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "https://proofmeta.org/schemas/v1/envelope.json",
   "title": "ProofMeta Signed Envelope",
-  "description": "The single primitive of the ProofMeta protocol. Every manifest, license request, and status update is wrapped in a Signed Envelope. See PROOFMETA_ANWEISUNG.md §3.1.",
+  "description": "The single primitive of the ProofMeta protocol. Every manifest, license request, and status update is wrapped in a Signed Envelope. See SPEC.md §3.1.",
   "type": "object",
   "required": ["proofmeta", "payload", "payload_hash", "author", "signature", "timestamp"],
   "additionalProperties": false,

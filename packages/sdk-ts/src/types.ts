@@ -3,7 +3,7 @@
 
 /**
  * ProofMeta v1 type definitions. Mirrors the JSON Schemas in packages/spec/.
- * Prose reference: PROOFMETA_ANWEISUNG.md §3.
+ * Prose reference: SPEC.md §3.
  */
 
 export const PROOFMETA_PROTOCOL_VERSION = "1.0" as const;

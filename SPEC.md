@@ -1,4 +1,4 @@
-# ProofMeta — Anweisung (Master Specification)
+# ProofMeta — Specification
 
 > **What this document is:** The single source of truth for every AI agent, human developer, and tool (Claude Projects, Cursor, OpenClaw, etc.) working on ProofMeta. If it's not in this document, it's not decided yet.
 
@@ -751,11 +751,11 @@ Drop this Anweisung into your Claude Project as the system prompt / project know
 
 ### 7.2 Cursor
 
-Use this same file as `PROOFMETA_ANWEISUNG.md` in your repo root. Cursor will index it and use it as context when you're coding. Add a `.cursorrules` file that references it:
+Use this same file as `SPEC.md` in your repo root. Cursor will index it and use it as context when you're coding. Add a `.cursorrules` file that references it:
 
 ```
 # .cursorrules
-Read PROOFMETA_ANWEISUNG.md before making any architectural decisions.
+Read SPEC.md before making any architectural decisions.
 ProofMeta is a protocol, not a platform.
 Everything is a Signed Envelope — no bare JSON ever.
 payload_hash MUST be sha256 over JCS (RFC 8785) canonical form of payload. Never roll your own canonicalization.
@@ -793,7 +793,7 @@ For agentic development sessions, you can use Claude Code to:
 
 Prompt pattern for Claude Code:
 ```
-Read PROOFMETA_ANWEISUNG.md. Then scaffold the repo:
+Read SPEC.md. Then scaffold the repo:
 /packages/spec        → JSON Schemas (envelope, manifest, request, status, review)
 /packages/core        → TypeScript SDK — zero chain deps, only tweetnacl + @noble/hashes
 /packages/sdk-py      → Python SDK

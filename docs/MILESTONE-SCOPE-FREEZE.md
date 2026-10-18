@@ -30,7 +30,7 @@ This document replaces the stale W21 2026 **AI Usage & Rights Check** commercial
 
 **Security-first v1 protocol hardening.** Work is limited to eliminating release-blocking ambiguity and acceptance gaps in envelope authenticity, actor authority, untrusted-input validation, and reproducibility. New product capabilities do not enter scope.
 
-The normative decisions are D16–D19 in `PROOFMETA_ANWEISUNG.md`. Normative authority must change before dependent schemas, SDKs, CLI behavior, fixtures, or examples.
+The normative decisions are D16–D19 in `SPEC.md`. Normative authority must change before dependent schemas, SDKs, CLI behavior, fixtures, or examples.
 
 ---
 

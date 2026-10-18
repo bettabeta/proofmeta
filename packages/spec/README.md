@@ -1,6 +1,6 @@
 # ProofMeta JSON Schemas
 
-Canonical machine-readable schemas for [ProofMeta v1](https://github.com/bettabeta/proofmeta). Normative prose lives in [`PROOFMETA_ANWEISUNG.md`](https://github.com/bettabeta/proofmeta/blob/main/PROOFMETA_ANWEISUNG.md).
+Canonical machine-readable schemas for [ProofMeta v1](https://github.com/bettabeta/proofmeta). Normative prose lives in [`SPEC.md`](https://github.com/bettabeta/proofmeta/blob/main/SPEC.md).
 
 ## Install
 
