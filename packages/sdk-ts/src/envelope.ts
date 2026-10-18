@@ -119,27 +119,74 @@ export interface VerifyOptions {
   resolveAuthor?: (author: string) => Promise<Uint8Array> | Uint8Array;
 }
 
+/** SPEC §3.1.1: `ed25519:` plus 128 lowercase hex chars (136 total). */
+const ED25519_SIGNATURE = /^ed25519:[a-f0-9]{128}$/;
+/** SPEC §3.1.1: `sha256:` plus 64 lowercase hex chars. */
+const SHA256_REF = /^sha256:[a-f0-9]{64}$/;
+/** SPEC §3.1 B1: envelope timestamp UTC suffix. `-00:00` and nonzero offsets fail. */
+const UTC_TIMESTAMP_SUFFIX = /(?:[Zz]|\+00:00)$/;
+
+function reject(reason: string): VerifyResult {
+  return { ok: false, reason };
+}
+
 /**
- * Verify a Signed Envelope:
- *   1. proofmeta version is 1.0
- *   2. payload_hash matches sha256(jcs(payload))
- *   3. signature is valid over the UTF-8 JCS signing projection
- *   4. core manifest and OPEN actors match their payload identities
+ * Crypto + actor checks only; not schema, transport, or acceptance.
  *
- * Does NOT verify `in_reply_to` chain integrity (that is a lifecycle concern
- * handled by verifyChain) or anchor authenticity (resolver concern).
+ * Syntax is checked before any hash or signature operation:
+ *   1. proofmeta version is 1.0
+ *   2. signature matches ^ed25519:[a-f0-9]{128}$
+ *   3. timestamp is a string with UTC suffix Z, z, or +00:00
+ *   4. payload_hash matches ^sha256:[a-f0-9]{64}$
+ *   5. payload_hash matches sha256(jcs(payload))
+ *   6. signature verifies over the UTF-8 JCS signing projection
+ *   7. core manifest and OPEN actors match their payload identities
+ *
+ * Malformed input returns `{ ok: false, reason }` and does not throw.
+ * Does not verify `in_reply_to` chain integrity (verifyChain) or anchors.
+ * Does not report acceptance; that is acceptProtocolInput.
  */
 export async function verifyEnvelope<P extends PayloadBase>(
   envelope: Envelope<P>,
   opts: VerifyOptions = {},
 ): Promise<VerifyResult> {
+  try {
+    return await verifyEnvelopeInner(envelope, opts);
+  } catch {
+    return reject("malformed envelope");
+  }
+}
+
+async function verifyEnvelopeInner<P extends PayloadBase>(
+  envelope: Envelope<P>,
+  opts: VerifyOptions,
+): Promise<VerifyResult> {
+  if (envelope === null || typeof envelope !== "object") {
+    return reject("malformed envelope");
+  }
+
   if (envelope.proofmeta !== PROOFMETA_PROTOCOL_VERSION) {
-    return { ok: false, reason: `unsupported version: ${envelope.proofmeta}` };
+    return reject(`unsupported version: ${envelope.proofmeta}`);
+  }
+
+  if (typeof envelope.signature !== "string" || !ED25519_SIGNATURE.test(envelope.signature)) {
+    return reject("signature must match ^ed25519:[a-f0-9]{128}$");
+  }
+
+  if (typeof envelope.timestamp !== "string") {
+    return reject("envelope.timestamp must be a string");
+  }
+  if (!UTC_TIMESTAMP_SUFFIX.test(envelope.timestamp)) {
+    return reject("timestamp must use UTC suffix Z, z, or +00:00");
+  }
+
+  if (typeof envelope.payload_hash !== "string" || !SHA256_REF.test(envelope.payload_hash)) {
+    return reject("payload_hash must match ^sha256:[a-f0-9]{64}$");
   }
 
   const recomputed = hashPayload(envelope.payload);
   if (!hashesEqual(recomputed, envelope.payload_hash)) {
-    return { ok: false, reason: "payload_hash does not match canonical payload" };
+    return reject("payload_hash does not match canonical payload");
   }
 
   let publicKey: Uint8Array;
@@ -148,35 +195,18 @@ export async function verifyEnvelope<P extends PayloadBase>(
   } else if (opts.resolveAuthor) {
     publicKey = await opts.resolveAuthor(envelope.author);
   } else {
-    return {
-      ok: false,
-      reason: `cannot resolve author DID without resolveAuthor: ${envelope.author}`,
-    };
+    return reject(`cannot resolve author DID without resolveAuthor: ${envelope.author}`);
   }
 
-  if (!envelope.signature.startsWith("ed25519:")) {
-    return { ok: false, reason: "signature is not an ed25519 reference" };
-  }
-  const sigHex = envelope.signature.slice("ed25519:".length);
-  let sigBytes: Uint8Array;
-  try {
-    sigBytes = hexToBytes(sigHex);
-  } catch {
-    return { ok: false, reason: "signature is not valid hex" };
-  }
-
-  if (typeof envelope.timestamp !== "string") {
-    return { ok: false, reason: "envelope.timestamp must be a string" };
-  }
-
+  const sigBytes = hexToBytes(envelope.signature.slice("ed25519:".length));
   const msg = new TextEncoder().encode(jcs(signingProjection(envelope)));
   const ok = await ed25519.verifyAsync(sigBytes, msg, publicKey);
-  if (!ok) return { ok: false, reason: "invalid ed25519 signature" };
+  if (!ok) return reject("invalid ed25519 signature");
 
   if (envelope.payload.type === "manifest") {
     const providerId = (envelope.payload as { provider?: { id?: unknown } }).provider?.id;
     if (envelope.author !== providerId) {
-      return { ok: false, reason: "manifest author must equal payload.provider.id" };
+      return reject("manifest author must equal payload.provider.id");
     }
   }
 
@@ -186,7 +216,7 @@ export async function verifyEnvelope<P extends PayloadBase>(
   ) {
     const consumerId = (envelope.payload as { consumer?: { id?: unknown } }).consumer?.id;
     if (envelope.author !== consumerId) {
-      return { ok: false, reason: "OPEN author must equal payload.consumer.id" };
+      return reject("OPEN author must equal payload.consumer.id");
     }
   }
 
@@ -312,6 +342,20 @@ export async function verifyChain(
   envelopes: Envelope<AnyPayload>[],
   opts: VerifyOptions = {},
 ): Promise<VerifyResult> {
+  try {
+    return await verifyChainInner(envelopes, opts);
+  } catch {
+    return { ok: false, reason: "malformed chain" };
+  }
+}
+
+async function verifyChainInner(
+  envelopes: Envelope<AnyPayload>[],
+  opts: VerifyOptions,
+): Promise<VerifyResult> {
+  if (!Array.isArray(envelopes)) {
+    return { ok: false, reason: "malformed chain" };
+  }
   if (envelopes.length === 0) {
     return { ok: false, reason: "empty chain" };
   }
