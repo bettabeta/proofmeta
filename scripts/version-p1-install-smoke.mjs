@@ -13,14 +13,14 @@ if (mode[0] === '--preinstall') {
   // Byte pins deliberately reject *all* graph/manifest changes, including formatting.
   // Updating these requires a separate graph/hook audit, not lock regeneration here.
   const approved = {
-    'package.json': 'dfaa3ab397b0c26f9ce22322a1177d3dc77b3d1477ca4ad15aaba1a654b9f64a',
-    'package-lock.json': '6f808403a29ea173d81d5e2da3afa4468970f5b7dc7a18347604323466601884',
+    'package.json': '6966086f2dd94daddfee348dfbb77fd02fe26c57b2c038b79c3f8858736e02b5',
+    'package-lock.json': 'a6cb9f527f4ae1d1f4bf4c50d757bc21240608e93ff2618d434a4059f6675d0e',
     'examples/consumer/package.json': '409d596168d3e1da0620ebcb972e0a829eb331be04b6b1a04af095e4b092d557',
     'examples/provider/package.json': 'd57fe9c96c14289e14df45de7ddda8b0e88d4f499ebb54e84eb31f1d1688e499',
-    'packages/cli/package.json': '66e9c6cb6188677ef37125ac75d4840664c3b3902d5864c0000091d39e60c252',
-    'packages/resolvers/free/package.json': '6091a56b65871e81e5679a76079b5ce8ce6635d079759fe9f13ce3b1359cc4f3',
-    'packages/sdk-ts/package.json': 'e94ddb7f2d1118700c77e8ad5cbfc32e9c0090ee892500463e157ed44f3612b5',
-    'packages/spec/package.json': '52a885fc423d6696b4b70bd0d5b7dd54d4f1c791cf630b45c6d05720493e5966'
+    'packages/cli/package.json': '88c8f5f9e65d0108c1bce2519a1fa72adce87c9811dcdddbf0e75ae2a2dd6265',
+    'packages/resolvers/free/package.json': '801dc7525679a3d965e4cb020e13895517a991464c5148e1391e53bd15c93119',
+    'packages/sdk-ts/package.json': '550c87f58a899b441cd8e6e6abf74613daa7f47f3d4fdb125c03b15f3654a771',
+    'packages/spec/package.json': 'f5a4c8dcf9ff97fd30dade432734b22665816fa080f4cf255dd638f59fde88c8'
   };
   assert.equal(resolve(process.cwd()), root, 'Run from the checkout root');
   assert.equal(process.env.ESBUILD_BINARY_PATH, undefined, 'No alternate binary permitted');
