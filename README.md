@@ -4,6 +4,7 @@
 
 [![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 [![Status: v1 Draft](https://img.shields.io/badge/Status-v1_Draft-yellow)]()
+[![CI](https://github.com/bettabeta/proofmeta/actions/workflows/ci.yml/badge.svg)](https://github.com/bettabeta/proofmeta/actions/workflows/ci.yml)
 
 [Website](https://www.proofmeta.com/) · [Manifest Generator](https://www.proofmeta.com/generate) · [Verifier](https://www.proofmeta.com/verify) · [Specification](./SPEC.md)
 
