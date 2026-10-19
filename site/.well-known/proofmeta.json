@@ -33,13 +33,13 @@
       {
         "item_id": "protocol-specification",
         "name": "ProofMeta Protocol Specification",
-        "description": "PROOFMETA_ANWEISUNG.md — the master specification of the ProofMeta protocol.",
+        "description": "SPEC.md — the master specification of the ProofMeta protocol.",
         "available_licenses": [
           "apache-2.0"
         ],
-        "content_hash": "sha256:c15d36af6b6c14b9c1c6a91c5c34b1e585c3d5662838c6dc551ac5c0f0d19937",
+        "content_hash": "sha256:37816325cfc32943159b1bf783c7c0d4afe6fe49870c21e01b34b9633a83ee78",
         "metadata": {
-          "url": "https://raw.githubusercontent.com/bettabeta/proofmeta/83681ebfbd7a8771836456345787a74960131b89/PROOFMETA_ANWEISUNG.md"
+          "url": "https://raw.githubusercontent.com/bettabeta/proofmeta/6b3bca545d49bea36124fc9d7b3078a052c70f3f/SPEC.md"
         }
       },
       {
@@ -49,15 +49,15 @@
         "available_licenses": [
           "apache-2.0"
         ],
-        "content_hash": "sha256:a4db870afc46535311091170aa30c626943d963bb36ed9830eece78c7629d007",
+        "content_hash": "sha256:82e21a68598d13c6d789e4e7b4c081b4044537ab0362147f8db0da1590c4d0d0",
         "metadata": {
           "url": "https://proofmeta.com/tools/proofmeta-tools.min.js"
         }
       }
     ]
   },
-  "payload_hash": "sha256:e5b1fab285cf6b6a75de8a0d06d18b6894796a0c5994dd54a9b1d20f30bbd138",
+  "payload_hash": "sha256:459e9b8332fcc50e6c8594545c57533aba6d139d83a32234d5e7828a4c9d9a40",
   "author": "did:key:z6MkqT3JBV3VoSp2Wn2hsh1YVvtDjxmS3j5Qk6hewXjcBY3a",
-  "signature": "ed25519:ea0f2e34210644555062b013e171aa5454a2ded43553276cef332f321b7a3cb589e517e4a4d099e75d2962aacbe5f4c300d07dd228255a8fa7844f75a5ca8102",
-  "timestamp": "2026-10-19T14:59:02.561Z"
+  "signature": "ed25519:cbdcd01b5617d873bb1bb59d8155b218351b17333a01cfe14885a3728ab4efd158df03572bb13a1a763fc85a1c4d0284ed298c45487aea921bbdae9364e0ad0f",
+  "timestamp": "2026-10-19T19:31:01.670Z"
 }
