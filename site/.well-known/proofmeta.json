@@ -3,7 +3,7 @@
   "payload": {
     "type": "manifest",
     "provider": {
-      "id": "did:key:z6MkrtrapcdcSupViKJJ6v7AuFoatyED7zSJkF7YVj4g4oQR",
+      "id": "did:key:z6MkqT3JBV3VoSp2Wn2hsh1YVvtDjxmS3j5Qk6hewXjcBY3a",
       "name": "ProofMeta — Pandr UG (haftungsbeschränkt)",
       "description": "The ProofMeta protocol project itself: specification, JSON schemas, reference SDK and browser tools."
     },
@@ -56,8 +56,8 @@
       }
     ]
   },
-  "payload_hash": "sha256:f05923d5699c19c19db0b34c0403ef80d441d8288fe1d2f18b34423e4595edc7",
-  "author": "did:key:z6MkrtrapcdcSupViKJJ6v7AuFoatyED7zSJkF7YVj4g4oQR",
-  "signature": "ed25519:1e5d57d8d28b7c8485d472f39434dbee1d9bc57c7665268e350b2cfb93f7d900daf5566e11db59a6002cb231d2d7e869b5dd7680d0e9904f1327f101bf0ea906",
-  "timestamp": "2026-10-17T13:54:37.566Z"
+  "payload_hash": "sha256:e5b1fab285cf6b6a75de8a0d06d18b6894796a0c5994dd54a9b1d20f30bbd138",
+  "author": "did:key:z6MkqT3JBV3VoSp2Wn2hsh1YVvtDjxmS3j5Qk6hewXjcBY3a",
+  "signature": "ed25519:ea0f2e34210644555062b013e171aa5454a2ded43553276cef332f321b7a3cb589e517e4a4d099e75d2962aacbe5f4c300d07dd228255a8fa7844f75a5ca8102",
+  "timestamp": "2026-10-19T14:59:02.561Z"
 }
