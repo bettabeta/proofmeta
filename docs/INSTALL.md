@@ -12,7 +12,7 @@ node scripts/version-p1-install-smoke.mjs --preinstall &&
   npm test
 ```
 
-`npm test` runs the SDK, CLI, provider and consumer tests, then the end-to-end flow (`npm run e2e` runs only the last part). To run the reference provider and consumer yourself, use two terminals:
+`npm test` runs the SDK, CLI, provider and consumer tests, the committed browser-bundle check, then the end-to-end flow (`npm run e2e` runs only the last part). To run the reference provider and consumer yourself, use two terminals:
 
 ```sh
 node examples/provider/server.mjs # serves http://127.0.0.1:4100/.well-known/proofmeta.json

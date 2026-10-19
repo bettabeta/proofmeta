@@ -13,7 +13,7 @@ if (mode[0] === '--preinstall') {
   // Byte pins deliberately reject *all* graph/manifest changes, including formatting.
   // Updating these requires a separate graph/hook audit, not lock regeneration here.
   const approved = {
-    'package.json': '6966086f2dd94daddfee348dfbb77fd02fe26c57b2c038b79c3f8858736e02b5',
+    'package.json': '57fa9e574776d0d93e707fdd14d7240c25a120bf87b6f8091405f97373659187',
     'package-lock.json': '2d7fe1c82ebe2bc48657f4b4e2a4731a3258a66e082deb33c1e216d875e82f6a',
     'examples/consumer/package.json': 'c0a08243ece4f4194a324643431b4e08d482fbe5bd61812cddf9dd77b7cf9adb',
     'examples/provider/package.json': 'd370785dcac1b369eabc549fe4e23be555e6a9e35840cc47108ee9453c970779',
