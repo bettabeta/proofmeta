@@ -7,7 +7,7 @@
 
 ## Before opening a PR
 - Rebase on current main. If there are conflicts: stop, list the conflicting files and what each side changed, wait. Never resolve a conflict in spec/, schemas, envelope.ts, or tests by guessing.
-- Run the full suite (SDK, CLI, examples, vector corpus) on the rebased branch, not on the old base. Report exact counts.
+- Run the full suite (SDK, CLI, examples, vector corpus) on the rebased branch, not on the old base. Report exact counts. The full suite is `npm test` plus `node --test scripts/test/site-manifest.test.mjs` (kept out of `npm test` because root `package.json` is byte-pinned by `scripts/version-p1-install-smoke.mjs`).
 - Diff must contain only what the task asked for. Anything else goes in a separate PR or gets mentioned as "noticed, not done".
 
 ## Before merging
