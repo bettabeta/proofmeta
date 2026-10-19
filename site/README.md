@@ -21,7 +21,7 @@ Static homepage for the ProofMeta Protocol. Deployed on Vercel from this subfold
 - `.well-known/proofmeta.json` — this site's signed Manifest. After changing any file it
   describes (bundle, `SPEC.md`, `license.txt`), re-sign with
   `PROOFMETA_SITE_SEED=… node scripts/sign-site-manifest.mjs`; hashes are recomputed from
-  the files. `node scripts/sign-site-manifest.mjs --check` runs in `npm test`.
+  the files. `node scripts/sign-site-manifest.mjs --check` runs in CI.
 - `vercel.json` — redirects + security headers
 - `scanner/` — *(to be added)* legacy ProofMeta Scanner, moved here from root
 
