@@ -40,5 +40,10 @@ jobs:
         env:
           NODE_OPTIONS: ${{ matrix.node-version == '18.x' && '--experimental-global-webcrypto' || '' }}
 
+      - name: Site manifest
+        run: node --test scripts/test/site-manifest.test.mjs
+        env:
+          NODE_OPTIONS: ${{ matrix.node-version == '18.x' && '--experimental-global-webcrypto' || '' }}
+
       - name: Audit
         run: npm audit --audit-level=high
