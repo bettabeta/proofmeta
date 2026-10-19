@@ -14,10 +14,10 @@ if (mode[0] === '--preinstall') {
   // Updating these requires a separate graph/hook audit, not lock regeneration here.
   const approved = {
     'package.json': '57fa9e574776d0d93e707fdd14d7240c25a120bf87b6f8091405f97373659187',
-    'package-lock.json': '2d7fe1c82ebe2bc48657f4b4e2a4731a3258a66e082deb33c1e216d875e82f6a',
+    'package-lock.json': 'd9ecf349d227e904e22c373d09a037aabfb5f77190ad61b19877b9c36542e1c2',
     'examples/consumer/package.json': 'c0a08243ece4f4194a324643431b4e08d482fbe5bd61812cddf9dd77b7cf9adb',
     'examples/provider/package.json': 'd370785dcac1b369eabc549fe4e23be555e6a9e35840cc47108ee9453c970779',
-    'packages/cli/package.json': 'c4c1ebfb692dfdd38b618bf280a2451b1e4d8ee5fec45eb3fc565c0d8d9ddf51',
+    'packages/cli/package.json': '6430872e7f16340c4d1924d35bdcafc572061e565090acbb550f42028a5f0e16',
     'packages/resolvers/free/package.json': '801dc7525679a3d965e4cb020e13895517a991464c5148e1391e53bd15c93119',
     'packages/sdk-ts/package.json': '286e7b3471714d81e19340bc09315912a7d15442011b2cba63a9f716b946e4ba',
     'packages/spec/package.json': 'f5a4c8dcf9ff97fd30dade432734b22665816fa080f4cf255dd638f59fde88c8'

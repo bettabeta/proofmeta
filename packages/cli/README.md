@@ -1,6 +1,6 @@
-# @proofmeta/cli — 0.5.0 migration
+# @proofmeta/cli — 0.6.0
 
-Thin adapter to `@proofmeta/sdk-ts/acceptance`. Package version 0.5.0 implements the v1 draft; it does not declare the ProofMeta protocol v1 released. Wire 1.0, canonical draft-07 schemas and D16 signing projection are unchanged. Ajv/Spec dependency metadata is retained; CLI decisions no longer compile separate validators.
+Thin adapter to `@proofmeta/sdk-ts/acceptance`. Package version 0.6.0 is the same package line as `@proofmeta/sdk-ts@0.6.0`. It implements the v1 draft; it does not declare the ProofMeta protocol v1 released. `0.5.0` added this acceptance adapter. Wire 1.0, canonical draft-07 schemas and D16 signing projection are unchanged. Ajv/Spec dependency metadata is retained; CLI decisions no longer compile separate validators.
 
 ## Local build
 

@@ -4,7 +4,7 @@
 **Owner:** Pandr UG / ProofMeta
 **Status:** Frozen — no scope changes without explicit owner re-freeze
 **Baseline:** `main` at `aaba41f014456a172d1341c43508fbec34562ba5`
-**Release boundary:** original breaking pre-v1 draft package line `0.3.0`; approved B1 SDK/CLI acceptance line `0.5.0` per the matrix below. This milestone does not declare protocol v1 released.
+**Release boundary:** original breaking pre-v1 draft package line `0.3.0`; approved B1 SDK/CLI acceptance line `0.5.0` per the matrix below. Current SDK and CLI package line, set 2026-10-19: `0.6.0`. This milestone does not declare protocol v1 released.
 
 ### B1 package-version reconciliation (2026-10-03)
 
@@ -18,7 +18,11 @@ The directly approved B1 package reconciles version requirements only, plus the 
 | `@proofmeta/spec` | `0.4.0` | `0.4.0` | Canonical schemas and IDs unchanged |
 | `@proofmeta/resolver-free` | `0.3.0` | `0.3.0` | Unchanged; no mechanical bump |
 
-Workspace coherence means consistent dependency resolution and lock metadata for this matrix, not equal package version numbers or a downgrade to `0.3.0`. Package/dependency changes and lockfile updates must land together in their authorized versioning change; this documentation diff changes neither. Wire `proofmeta: "1.0"`, D16 signing projection, existing schemas, and Node `>=18` remain unchanged. Runtime matrix, migration, clean-install, tarball, browser/CSP, and independent-review gates must still be demonstrated. `policy.scope` semantics remain unresolved and outside B1; the narrow Manifest-scope outcome must name this residual explicitly. No existing completion checkbox is satisfied by this reconciliation alone.
+### Current package line (2026-10-19)
+
+Owner direction: `@proofmeta/sdk-ts` and `@proofmeta/cli` are both `0.6.0`. `@proofmeta/spec` stays `0.4.0`. `@proofmeta/resolver-free` stays `0.3.0`. Private Provider and Consumer demos stay `0.4.0`. This records the fail-closed verification bump already in the SDK and lifts the CLI onto that same line. It does not re-freeze milestone scope, check a completion box, change wire `proofmeta: "1.0"`, or replace the historical B1 target column above. `policy.scope` stays unresolved and outside B1.
+
+Workspace coherence means consistent dependency resolution and lock metadata for this matrix, not equal package version numbers or a downgrade to `0.3.0`. Package/dependency changes and lockfile updates must land together in their authorized versioning change. The 2026-10-03 reconciliation diff changed neither package versions nor the lockfile. The 2026-10-19 line above is the later owner-set package line. Wire `proofmeta: "1.0"`, D16 signing projection, existing schemas, and Node `>=18` remain unchanged. Runtime matrix, migration, clean-install, tarball, browser/CSP, and independent-review gates must still be demonstrated. `policy.scope` semantics remain unresolved and outside B1; the narrow Manifest-scope outcome must name this residual explicitly. No existing completion checkbox is satisfied by this reconciliation alone.
 
 ---
 

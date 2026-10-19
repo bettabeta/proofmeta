@@ -113,7 +113,7 @@ From npm:
 npm install @proofmeta/sdk-ts
 ```
 
-Current npm versions: `@proofmeta/sdk-ts` 0.5.0, `@proofmeta/cli` 0.5.0, `@proofmeta/spec` 0.4.0, `@proofmeta/resolver-free` 0.3.0.
+Current package line: `@proofmeta/sdk-ts` 0.6.0, `@proofmeta/cli` 0.6.0, `@proofmeta/spec` 0.4.0, `@proofmeta/resolver-free` 0.3.0. npm publish follows the matching `sdk-ts@` and `cli@` tags.
 
 To build, test, and run the reference provider, consumer, and CLI from a checkout: [docs/INSTALL.md](./docs/INSTALL.md).
 
