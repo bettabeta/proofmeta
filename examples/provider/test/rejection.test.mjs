@@ -24,6 +24,7 @@ import { mkdtemp, writeFile, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { createRequire } from "node:module";
 import path from "node:path";
+import http from "node:http";
 import net from "node:net";
 import { setTimeout as delay } from "node:timers/promises";
 
@@ -705,6 +706,44 @@ test("rejects duplicate request_id (one-shot replay protection)", async () => {
   assert.equal(second.status, 409);
   const { error } = await second.json();
   assert.match(error, /already seen/);
+});
+
+test("rejects a body over 65536 bytes with 413", async () => {
+  const res = await fetch(`${ORIGIN}/api/proofmeta/request`, {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: Buffer.alloc(65537, 0x78),
+  });
+  assert.equal(res.status, 413);
+  const body = await res.json();
+  assert.equal(body.code, "BODY_TOO_LARGE");
+});
+
+test("rejects a chunked body over 65536 bytes with 413", async () => {
+  const status = await new Promise((resolve, reject) => {
+    const req = http.request(
+      { hostname: "127.0.0.1", port: PORT, method: "POST", path: "/api/proofmeta/request" },
+      (res) => {
+        res.resume();
+        res.on("end", () => resolve(res.statusCode));
+      },
+    );
+    req.on("error", reject);
+    req.write(Buffer.alloc(65537, 0x78));
+    req.end();
+  });
+  assert.equal(status, 413);
+});
+
+test("a 65536-byte body is still an acceptance failure, not a size failure", async () => {
+  const res = await fetch(`${ORIGIN}/api/proofmeta/request`, {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: Buffer.alloc(65536, 0x78),
+  });
+  assert.equal(res.status, 400);
+  const body = await res.json();
+  assert.equal(body.error, "invalid protocol input");
 });
 
 test("rejects empty body with 400", async () => {
