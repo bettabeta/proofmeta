@@ -60,6 +60,32 @@ test("undefined signature is rejected without throwing", async () => {
   await assertRejected({ ...env, signature: undefined });
 });
 
+test("a failed resolveAuthor is not reported as a malformed envelope", async () => {
+  const env = await signed();
+  const author = "did:example:not-a-key";
+  const envelope = { ...env, author };
+  const thrown = await verifyEnvelope(envelope, {
+    resolveAuthor() {
+      throw new Error("secret token");
+    },
+  });
+  assert.equal(thrown.ok, false);
+  assert.equal(thrown.reason, `cannot resolve author DID: ${author}`);
+  assert.equal(thrown.reason.includes("secret"), false);
+
+  const short = await verifyEnvelope(envelope, {
+    resolveAuthor: () => new Uint8Array(16),
+  });
+  assert.equal(short.ok, false);
+  assert.equal(short.reason, `cannot resolve author DID: ${author}`);
+
+  const mismatched = await verifyEnvelope(envelope, {
+    resolveAuthor: () => new Uint8Array(32),
+  });
+  assert.equal(mismatched.ok, false);
+  assert.equal(mismatched.reason, "invalid ed25519 signature");
+});
+
 test("uppercase payload_hash is rejected without throwing", async () => {
   const env = await signed();
   const hex = env.payload_hash.slice("sha256:".length);

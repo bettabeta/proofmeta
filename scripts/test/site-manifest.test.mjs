@@ -37,6 +37,19 @@ test('unknown or missing items are rejected', async () => {
   assert.ok((await checkManifest(missing)).some((p) => p.startsWith('items:')));
 });
 
+test('vercel CSP blocks inline and eval scripts', () => {
+  const vercel = JSON.parse(readFileSync(path.join(repoRoot, 'site/vercel.json'), 'utf8'));
+  const csp = vercel.headers.flatMap((group) => group.headers).find((header) => header.key === 'Content-Security-Policy');
+  assert.ok(csp, 'Content-Security-Policy header');
+  const script = csp.value.split(';').map((part) => part.trim()).find((part) => part.startsWith('script-src'));
+  assert.ok(script);
+  assert.match(script, /'self'/);
+  assert.doesNotMatch(script, /unsafe-inline|unsafe-eval/);
+  assert.match(csp.value, /object-src 'none'/);
+  assert.match(csp.value, /base-uri 'self'/);
+  assert.match(csp.value, /frame-ancestors 'none'/);
+});
+
 test('stale description is reported', async () => {
   const stale = structuredClone(manifest);
   stale.payload.items[0].description = 'PROOFMETA_ANWEISUNG.md — old';

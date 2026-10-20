@@ -39,7 +39,7 @@
         ],
         "content_hash": "sha256:d7e29ef485c9c195a41a6abdb112ca70d129dcc295ca10066550a68d596c6e18",
         "metadata": {
-          "url": "https://raw.githubusercontent.com/bettabeta/proofmeta/a99973cf0bafc6ec135a345706591b84ac4c1666/SPEC.md"
+          "url": "https://raw.githubusercontent.com/bettabeta/proofmeta/9c953fb03a18dacfe7bda30cb796c05753dcb5d9/SPEC.md"
         }
       },
       {
@@ -49,15 +49,15 @@
         "available_licenses": [
           "apache-2.0"
         ],
-        "content_hash": "sha256:82e21a68598d13c6d789e4e7b4c081b4044537ab0362147f8db0da1590c4d0d0",
+        "content_hash": "sha256:89d00e494db437e60c6826caadabe3c0993e49d2e5d6a2ee016bd932439ae6b5",
         "metadata": {
           "url": "https://proofmeta.com/tools/proofmeta-tools.min.js"
         }
       }
     ]
   },
-  "payload_hash": "sha256:8f5324efc46debd6af4361e4d15aea2ab31e0da18fdb0108e80e99b47d54a1b8",
+  "payload_hash": "sha256:6dec24d1a9ac1a3d5b2defa6249a5634e306be638eb682681243314061e6f595",
   "author": "did:key:z6MkqT3JBV3VoSp2Wn2hsh1YVvtDjxmS3j5Qk6hewXjcBY3a",
-  "signature": "ed25519:0e1a39cfd6dafcd169eb97c64958d98a5d145c2c0061cd9fe4387c522b729a6126d1080d573f46dd4224b63e8978616d8515cd3cff8dca926eb6b4ad43898e04",
-  "timestamp": "2026-10-20T16:06:21.607Z"
+  "signature": "ed25519:3ad2864923881466858f22a24fbfc4eef813f6c467c3a5065d20081c368027e7f4c73a085c0da93488b04999234d95b296e9f4fd601a8e400ca48f6e7320fd0f",
+  "timestamp": "2026-10-20T17:26:52.065Z"
 }
