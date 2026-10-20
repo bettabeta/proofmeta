@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://proofmeta.org/schemas/v1/payload.manifest.json",
+  "$id": "https://proofmeta.com/schemas/v1/payload.manifest.json",
   "title": "ProofMeta Manifest Payload",
   "description": "Payload schema for a License Manifest envelope. The outer envelope MUST validate against envelope.schema.json. See SPEC.md §3.3.",
   "type": "object",

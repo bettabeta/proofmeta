@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://proofmeta.org/schemas/v1/envelope.json",
+  "$id": "https://proofmeta.com/schemas/v1/envelope.json",
   "title": "ProofMeta Signed Envelope",
   "description": "The single primitive of the ProofMeta protocol. Every manifest, license request, and status update is wrapped in a Signed Envelope. See SPEC.md §3.1.",
   "type": "object",
@@ -46,7 +46,7 @@
     "in_reply_to": {
       "type": "string",
       "pattern": "^sha256:[a-f0-9]{64}$",
-      "description": "Signed payload_hash of the logically previous envelope in the same lifecycle. Required for status updates and reviews. Omitted for roots (manifest, license.request) and from their signing projections."
+      "description": "Signed payload_hash of the logically previous envelope in the same lifecycle. Required for status updates. Omitted for roots (manifest, license.request) and from their signing projections."
     },
     "anchors": {
       "type": "array",
