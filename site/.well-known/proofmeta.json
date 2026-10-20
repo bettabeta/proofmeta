@@ -49,15 +49,15 @@
         "available_licenses": [
           "apache-2.0"
         ],
-        "content_hash": "sha256:82e21a68598d13c6d789e4e7b4c081b4044537ab0362147f8db0da1590c4d0d0",
+        "content_hash": "sha256:89d00e494db437e60c6826caadabe3c0993e49d2e5d6a2ee016bd932439ae6b5",
         "metadata": {
           "url": "https://proofmeta.com/tools/proofmeta-tools.min.js"
         }
       }
     ]
   },
-  "payload_hash": "sha256:459e9b8332fcc50e6c8594545c57533aba6d139d83a32234d5e7828a4c9d9a40",
+  "payload_hash": "sha256:eb9580748bf78e26b79c0a259bfe1b38d8a1cf024d486e1a9f62faaa9c5c9c6a",
   "author": "did:key:z6MkqT3JBV3VoSp2Wn2hsh1YVvtDjxmS3j5Qk6hewXjcBY3a",
-  "signature": "ed25519:cbdcd01b5617d873bb1bb59d8155b218351b17333a01cfe14885a3728ab4efd158df03572bb13a1a763fc85a1c4d0284ed298c45487aea921bbdae9364e0ad0f",
-  "timestamp": "2026-10-19T19:31:01.670Z"
+  "signature": "ed25519:e4a14ce1de14d2c96aed887dde8733b3680f13d74d8ac68ea720882b6c19170688bcde430677a4fa995cb7d7ac6838a90cc2de43849358fde38598109b4e4201",
+  "timestamp": "2026-10-20T16:19:02.259Z"
 }

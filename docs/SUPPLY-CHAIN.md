@@ -1,6 +1,6 @@
 # Supply chain: why the checkout install is pinned
 
-This is the admission policy for a checkout of this repository. Published npm packages are older than this tree; see the root README.
+This is the admission policy for a checkout of this repository. The published npm versions of the workspace packages match the versions declared in this tree; see the root README. A commit that does not bump a version is not a new release.
 
 ## Bounded local install policy (Version-P1/Z1)
 
