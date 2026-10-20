@@ -1,9 +1,9 @@
 # Proposal — Policy Attestations (rootable status)
 
-**Status:** Accepted & merged to `main` (2026-06-21, via `feat/policy-attestations`; freeze window from `MILESTONE-SCOPE-FREEZE.md` has elapsed). Decision recorded as D14 in `SPEC.md` §10; spec text in §3.4.1. Full test suite green: licensing behaviour unchanged, backward-compat proven. Phases 1–3 done; Phase 4 (agent-xray emits attestations) is downstream in the agent-xray repo.
+**Status:** Accepted & merged to `main` (2026-06-21, via `feat/policy-attestations`; freeze window from `MILESTONE-SCOPE-FREEZE.md` has elapsed). Decision recorded as D14 in `SPEC.md` §9; spec text in §3.4.1. Full test suite green: licensing behaviour unchanged, backward-compat proven. Phases 1–3 done; Phase 4 (agent-xray emits attestations) is downstream in the agent-xray repo.
 **Date:** 2026-06-21
 **Owner:** Pandr UG / ProofMeta
-**Proposed decision entry:** D14 (see §10 of [`SPEC.md`](../SPEC.md))
+**Proposed decision entry:** D14 (see §9 of [`SPEC.md`](../SPEC.md))
 **Version impact:** Additive → **v1.1** (minor bump). No breaking change.
 
 ---
@@ -110,7 +110,7 @@ The normative core vocabulary is **not** extended.
 - Any change to manifest, license-request, or envelope schemas.
 - A separate `policy.verdict` / `audit.event` payload type (explicitly rejected: reusing `status.update` keeps one vocabulary; see §2).
 
-## 10. Proposed §10 decision entry
+## 10. Proposed §9 decision entry
 
 > **D14 — How standalone policy verdicts are expressed.** A `status.update` MAY be a **root attestation**: instead of `request_id` + `in_reply_to`, it carries `subject` + `policy` and is signed by the asserting authority. A `oneOf` in the status schema makes the two modes mutually exclusive, so existing licensing verdicts validate unchanged and the absence of `request_id` is only valid when `subject` + `policy` are present. The status enum and scope-URL mechanism (D11) are reused; no new payload type or core vocabulary. Attestation history chains use free transitions (no terminal states) with a constant subject. See §3.4 and `docs/attestation-extension-proposal.md`. *(Date: TBD on acceptance.)*
 

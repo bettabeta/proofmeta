@@ -35,7 +35,7 @@ These are non-negotiable. Every design decision must pass through these filters:
    Ship the smallest useful protocol. Let the ecosystem build the rest.
 
 7. **Everything is a signed envelope.**
-   No bare JSON. Every artifact in the protocol — manifests, requests, status updates, reviews — is wrapped in a Signed Envelope (see §3.1). Who, what, when must always be cryptographically verifiable.
+   No bare JSON. Every artifact in the protocol — manifests, requests, and status updates — is wrapped in a Signed Envelope (see §3.1). Who, what, when must always be cryptographically verifiable.
 
 8. **Anchoring is optional, not architectural.**
    The protocol defines *how* an envelope can reference an external anchor (on-chain, notary, timestamping service). It never requires one. A ProofMeta deployment with zero chains is as valid as one with five.
@@ -74,7 +74,7 @@ These are non-negotiable. Every design decision must pass through these filters:
 | `author` | ✅ | DID identifying the signer. v1 MUST support `did:key` with ed25519 (see §3.1.2). Other DID methods MAY appear; consumers MAY accept them by policy. |
 | `signature` | ✅ | `ed25519` signature over the deterministic JCS signing projection defined in §3.1.1, using the author's key |
 | `timestamp` | ✅ | ISO 8601 UTC timestamp asserted and signed by the author |
-| `in_reply_to` | ⚠️ context | Signed `payload_hash` of the logically previous envelope in the same lifecycle. Required for status updates and reviews. Omitted from roots and from their signing projections. |
+| `in_reply_to` | ⚠️ context | Signed `payload_hash` of the logically previous envelope in the same lifecycle. Required for status updates. Omitted from roots and from their signing projections. |
 | `anchors` | ❌ | Optional, independently verified external evidence (see §3.5). Outside the author's signing projection; MAY be omitted and, when present, MUST be a non-empty array of valid anchor entries. |
 
 #### 3.1.1 Canonical Serialization (JCS / RFC 8785)
@@ -190,13 +190,12 @@ Envelopes MAY carry any syntactically-valid DID in `author`. The protocol does n
 - **Integrity:** `sha256(JCS(payload)) == payload_hash` → payload content wasn't altered
 - **Authenticity and signed context:** verifying the Ed25519 signature over the §3.1.1 projection proves the author key signed the protocol version, payload hash, author DID, timestamp, and optional parent link
 - **Order within a lifecycle:** signed `in_reply_to` values chain status updates of a single request; chain verification additionally enforces the actor rules in §3.4
-- **No fake reviews:** a review envelope must reference a valid `GRANTED` envelope hash, same author as the request, one review per grant. Math prevents fraud.
 
 #### What `in_reply_to` Is NOT
 
 `in_reply_to` is **not** a global chain of everything an author ever signed. That would be a blockchain, and ProofMeta is not a blockchain.
 
-It is the semantic equivalent of email threading or ActivityPub replies: it links envelopes **within a single request lifecycle**. The `OPEN` envelope is the root; `PENDING` replies to `OPEN`; `GRANTED` replies to `PENDING`; a review replies to `GRANTED`. That's it.
+It is the semantic equivalent of email threading or ActivityPub replies: it links envelopes **within a single request lifecycle**. The `OPEN` envelope is the root; `PENDING` replies to `OPEN`; `GRANTED` replies to `PENDING`. That's it.
 
 Envelopes that are roots of their own context (identity registration, skill publication, license objects) have no `in_reply_to`.
 
@@ -633,12 +632,12 @@ This is the most important architectural boundary.
 |-----------|-------------|
 | **Envelope Spec** | The JSON schema for Signed Envelopes, including canonical serialization rules |
 | **Manifest Spec** | The envelope-wrapped manifest at `/.well-known/proofmeta.json` |
-| **Request/Status Spec** | Envelope schemas for license requests, status updates, reviews |
+| **Request/Status Spec** | Envelope schemas for license requests and status updates |
 | **Status Lifecycle** | The state machine (`OPEN → PENDING → {GRANTED | DENIED}`; `DENIED` terminal; `GRANTED → {SUSPENDED | REVOKED}`; `SUSPENDED → {GRANTED | REVOKED}`) and the valid `in_reply_to` transitions |
 | **Anchor Interface** | The shape of the `anchors` array — not the anchor types themselves |
 | **Discovery Spec** | The Well-Known URL convention (`/.well-known/proofmeta.json`). Nothing else. |
 | **Catalog Query Spec** | The four standard query parameters (`q`, `license_type`, `limit`, `offset`) and the response format. See §3.8. |
-| **Reference SDK** | Lightweight libraries (TypeScript, Python) that implement envelope creation, signing, verification |
+| **Reference SDK** | The TypeScript library that implements envelope creation, signing, and verification |
 | **Validator** | A tool that checks if an envelope or manifest is spec-compliant |
 | **Reference Agent** | A minimal working agent that demonstrates the protocol end-to-end |
 
@@ -733,72 +732,7 @@ Consumer Agent                     Provider Agent
 
 ---
 
-## 7. Development Tooling & Workflow
-
-### 7.1 Claude Projects (this file)
-
-Drop this Anweisung into your Claude Project as the system prompt / project knowledge. Every conversation in that project will have full context on:
-- The Signed Envelope primitive
-- What's core vs. external
-- The status lifecycle
-- The anchor interface
-
-### 7.2 Cursor
-
-Use this same file as `SPEC.md` in your repo root. Cursor will index it and use it as context when you're coding. Add a `.cursorrules` file that references it:
-
-```
-# .cursorrules
-Read SPEC.md before making any architectural decisions.
-ProofMeta is a protocol, not a platform.
-Everything is a Signed Envelope — no bare JSON ever.
-payload_hash MUST be sha256 over JCS (RFC 8785) canonical form of payload. Never roll your own canonicalization.
-signature MUST be ed25519 over the JCS projection of proofmeta, payload_hash, author, timestamp, and optional in_reply_to defined in §3.1.1. Never silently accept the legacy payload-hash-only signature rule.
-author MUST be a DID. v1 only guarantees verification of did:key with ed25519. Do not implement did:web or other DID methods without an explicit spec update.
-Discovery in v1 is a single HTTPS GET to a Manifest URL (typically /.well-known/proofmeta.json). Do not build, assume, or depend on a registry.
-The status lifecycle is sacred: `OPEN → PENDING → {GRANTED | DENIED}`; `DENIED` is terminal; `GRANTED → {SUSPENDED | REVOKED}`; `SUSPENDED → {GRANTED | REVOKED}`; `REVOKED` is terminal.
-SUSPENDED is temporary and reinstatable; REVOKED is permanent and terminal — never conflate them in app-layer flags.
-in_reply_to chains envelopes within a single request lifecycle — it is NOT a blockchain.
-Anchors are optional, pluggable, and never required by the protocol.
-Anchors are outside the author signing projection and contribute no trust until independently validated by their resolver or verifier.
-Never hardcode a payment provider, storage backend, chain, or anchor type.
-All external concerns go through the Resolver interface.
-```
-
-### 7.3 OpenClaw (Agent Setup)
-
-OpenClaw agents can be structured around ProofMeta's separation of concerns:
-
-| OpenClaw Agent | Role |
-|---------------|------|
-| **Spec Agent** | Maintains envelope + manifest JSON schemas, validates compliance |
-| **SDK Agent** | Writes and tests the reference TypeScript/Python SDKs (envelope creation, signing, verification) |
-| **Resolver Agent** | Builds reference resolver implementations (payment, delivery, anchor) |
-| **Demo Agent** | Builds and runs the reference Provider + Consumer agents |
-| **Docs Agent** | Keeps documentation, examples, and tutorials in sync with the spec |
-
-### 7.4 Claude Code (Agentic Option)
-
-For agentic development sessions, you can use Claude Code to:
-- Scaffold the entire repo structure based on this spec
-- Generate the JSON Schema files from the envelope examples
-- Write the reference SDK with tests
-- Build a working demo with two agents transacting
-
-Prompt pattern for Claude Code:
-```
-Read SPEC.md. Then scaffold the repo:
-/packages/spec        → JSON Schemas (envelope, manifest, request, status, review)
-/packages/core        → TypeScript SDK — zero chain deps, only tweetnacl + @noble/hashes
-/packages/sdk-py      → Python SDK
-/packages/resolvers   → Reference resolver implementations (free, stripe, solana-anchor)
-/examples/provider    → Demo provider agent
-/examples/consumer    → Demo consumer agent
-```
-
----
-
-## 8. v1 Scope (What to Build First)
+## 7. v1 Scope (What to Build First)
 
 ### In scope for v1
 - [x] Signed Envelope spec (JSON Schema + JCS/RFC 8785 canonical serialization rules)
@@ -829,7 +763,7 @@ Read SPEC.md. Then scaffold the repo:
 
 ---
 
-## 9. Success Criteria
+## 8. Success Criteria
 
 ### ProofMeta v1 is done when
 
@@ -847,7 +781,7 @@ Read SPEC.md. Then scaffold the repo:
 
 ---
 
-## 10. Open Questions (To Decide)
+## 9. Open Questions (To Decide)
 
 The applicability of D11 Manifest scope semantics to the optional Mode B `policy.scope` field remains unresolved and is explicitly excluded from B1. No equivalence or new semantic validator claim for that field is established by B1. Other new questions will be added here as they arise during implementation.
 
@@ -888,7 +822,7 @@ These are consistency and robustness fixes applied alongside D8–D11. None chan
 
 ---
 
-## 11. License & Attribution
+## 10. License & Attribution
 
 ProofMeta is created and maintained by **Daud Zulfacar, Pandr UG (haftungsbeschränkt)**.
 

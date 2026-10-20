@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://proofmeta.org/schemas/v1/payload.status-update.json",
+  "$id": "https://proofmeta.com/schemas/v1/payload.status-update.json",
   "title": "ProofMeta Status Update Payload",
   "description": "Payload schema for PENDING / GRANTED / DENIED / SUSPENDED / REVOKED envelopes. A status.update has exactly one of two modes (see `oneOf`): (A) a CHAINED VERDICT in a license lifecycle — carries `request_id`, and the outer envelope's in_reply_to MUST point at the previous envelope's payload_hash; or (B) a ROOT ATTESTATION — a standalone, signed policy/governance verdict that carries `subject` + `policy` and no `request_id`, with no prior request required. The first attestation about a subject is an envelope root (no in_reply_to). See SPEC.md §3.4 and docs/attestation-extension-proposal.md.",
   "type": "object",

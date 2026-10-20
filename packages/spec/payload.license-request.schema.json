@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://proofmeta.org/schemas/v1/payload.license-request.json",
+  "$id": "https://proofmeta.com/schemas/v1/payload.license-request.json",
   "title": "ProofMeta License Request Payload",
   "description": "Payload schema for the OPEN envelope of a license request lifecycle. The outer envelope MUST validate against envelope.schema.json and MUST NOT include in_reply_to (OPEN is a root). See SPEC.md §3.6.",
   "type": "object",
