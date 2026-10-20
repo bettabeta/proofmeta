@@ -1,6 +1,16 @@
 # Install
 
-Prerequisites: Node.js >=18 with npm, on Linux x64 (the post-install check covers only that platform). On Node 18, prefix test and CLI commands with `NODE_OPTIONS=--experimental-global-webcrypto`.
+## Just use the SDK
+
+```sh
+npm install @proofmeta/sdk-ts
+```
+
+See the [reference consumer](../examples/consumer/client.mjs) for the current manifest-to-license flow.
+
+The SDK and examples use portable Node.js APIs. The pinned post-install smoke check below is Linux x64 only because it directly verifies the `@esbuild/linux-x64` binary. On Node 18, prefix test and CLI commands with `NODE_OPTIONS=--experimental-global-webcrypto`.
+
+To build and test this repository from source:
 
 From the root of a fresh clone (the first command rejects an existing `node_modules`, and npm must not start if it fails):
 
