@@ -29,9 +29,11 @@ import {
 const bytes = await readFile(new URL("./envelope.json", import.meta.url));
 const report = await acceptProtocolInput(
   { kind: "bytes", bytes },
-  { operation: "inspect-envelope", purpose: "inspection" },
+  { operation: "manifest", purpose: "protocol-conformance" },
 );
-// report.accepted === false for inspection. checks records ingress, schema, hash, and signature.
+// report.accepted is true only when every check for that operation passes.
+
+// inspect-envelope is a diagnostic. It records checks and always returns accepted: false.
 
 const kp = await generateKeyPair();
 // → { did: "did:key:z6Mk...", publicKey, privateKey }

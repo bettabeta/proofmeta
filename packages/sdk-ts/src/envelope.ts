@@ -193,7 +193,14 @@ async function verifyEnvelopeInner<P extends PayloadBase>(
   if (isDidKeyEd25519(envelope.author)) {
     publicKey = decodeDidKey(envelope.author);
   } else if (opts.resolveAuthor) {
-    publicKey = await opts.resolveAuthor(envelope.author);
+    try {
+      publicKey = await opts.resolveAuthor(envelope.author);
+    } catch {
+      return reject(`cannot resolve author DID: ${envelope.author}`);
+    }
+    if (!(publicKey instanceof Uint8Array) || publicKey.length !== 32) {
+      return reject(`cannot resolve author DID: ${envelope.author}`);
+    }
   } else {
     return reject(`cannot resolve author DID without resolveAuthor: ${envelope.author}`);
   }
