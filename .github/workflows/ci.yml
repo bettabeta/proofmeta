@@ -45,5 +45,10 @@ jobs:
         env:
           NODE_OPTIONS: ${{ matrix.node-version == '18.x' && '--experimental-global-webcrypto' || '' }}
 
+      - name: E2E supervisor
+        run: node --test scripts/test/e2e-supervisor.test.mjs
+        env:
+          NODE_OPTIONS: ${{ matrix.node-version == '18.x' && '--experimental-global-webcrypto' || '' }}
+
       - name: Audit
         run: npm audit --audit-level=high

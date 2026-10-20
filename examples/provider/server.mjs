@@ -70,9 +70,8 @@ const skillPackContentHash = `sha256:${createHash("sha256").update(skillPackByte
 const inlineItems = [
   {
     item_id: "cost-optimizer-skill@0.1",
-    name: "Cost-Optimizer Skill",
-    description:
-      "Claude skill pack that analyzes LLM configs and proposes cost-reducing edits. Validated on ProofMeta Scanner telemetry (40–70% cost reduction, ~€105/month avg savings).",
+    name: "Reference item",
+    description: "Item published by the reference provider.",
     available_licenses: ["free-attribution"],
     content_hash: skillPackContentHash,
     metadata: { format: "skill-pack", version: "0.1.0" },
@@ -134,7 +133,18 @@ server.listen(PORT, HOST);
 async function handleRequest(req, res) {
   // 1. Preserve HTTP bytes and accept a root OPEN for this Provider. Use the
   // detached SDK snapshot for every later check and processing step.
-  const bytes = await readBytes(req);
+  let bytes;
+  try {
+    bytes = await readBytes(req);
+  } catch (err) {
+    if (err?.code === "BODY_TOO_LARGE") {
+      req.on("error", () => {});
+      json(res, 413, { error: "request body too large", code: "BODY_TOO_LARGE" });
+      res.on("finish", () => req.destroy());
+      return;
+    }
+    throw err;
+  }
   const report = await acceptProtocolInput({ kind: "bytes", bytes }, {
     operation: "provider-open", purpose: "protocol-conformance",
     expectedProvider: keypair.did,
@@ -219,12 +229,47 @@ function json(res, status, body) {
   res.end(payload);
 }
 
-function readBytes(req) {
+// A reference OPEN envelope is a few kilobytes. The cap stops a client from
+// buffering an unbounded body before acceptance rejects it.
+const MAX_REQUEST_BYTES = 65536;
+
+function readBytes(req, limit = MAX_REQUEST_BYTES) {
+  const declared = req.headers["content-length"];
+  if (declared !== undefined && Number(declared) > limit) {
+    const err = new Error("request body too large");
+    err.code = "BODY_TOO_LARGE";
+    return Promise.reject(err);
+  }
   return new Promise((resolve, reject) => {
     const chunks = [];
-    req.on("data", (c) => chunks.push(c));
-    req.on("end", () => resolve(Buffer.concat(chunks)));
-    req.on("error", reject);
+    let total = 0;
+    let settled = false;
+    const fail = (err) => {
+      if (settled) return;
+      settled = true;
+      reject(err);
+    };
+    req.on("data", (chunk) => {
+      if (settled) return;
+      total += chunk.length;
+      if (total > limit) {
+        const err = new Error("request body too large");
+        err.code = "BODY_TOO_LARGE";
+        req.pause();
+        fail(err);
+        return;
+      }
+      chunks.push(chunk);
+    });
+    req.on("end", () => {
+      if (settled) return;
+      settled = true;
+      resolve(Buffer.concat(chunks));
+    });
+    req.on("error", (err) => {
+      if (err?.code === "BODY_TOO_LARGE") return;
+      fail(err);
+    });
   });
 }
 
@@ -232,5 +277,7 @@ function readBytes(req) {
 for (const sig of ["SIGINT", "SIGTERM"]) {
   process.on(sig, () => {
     server.close(() => process.exit(0));
+    // Node 18's close() leaves idle keep-alive sockets open; Node 19+ closes them.
+    server.closeIdleConnections?.();
   });
 }

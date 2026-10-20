@@ -2,7 +2,7 @@
 
 > **What this document is:** The single source of truth for every AI agent, human developer, and tool (Claude Projects, Cursor, OpenClaw, etc.) working on ProofMeta. If it's not in this document, it's not decided yet.
 
-> **Last updated:** 2026-10-03 (D1–D7 locked 2026-04-16; D8–D11 + cleanup applied 2026-04-21; D12–D13 locked 2026-04-23; D14 accepted and merged 2026-06-21; D15 locked 2026-09-01; D16–D19 locked 2026-09-04; approved B1 clarification and package-version reconciliation drafted locally 2026-10-03, independent review pending)
+> **Last updated:** 2026-10-20 (D1–D7 locked 2026-04-16; D8–D11 + cleanup applied 2026-04-21; D12–D13 locked 2026-04-23; D14 accepted and merged 2026-06-21; D15 locked 2026-09-01; D16–D19 locked 2026-09-04)
 
 ---
 
@@ -77,8 +77,6 @@ These are non-negotiable. Every design decision must pass through these filters:
 | `in_reply_to` | ⚠️ context | Signed `payload_hash` of the logically previous envelope in the same lifecycle. Required for status updates and reviews. Omitted from roots and from their signing projections. |
 | `anchors` | ❌ | Optional, independently verified external evidence (see §3.5). Outside the author's signing projection; MAY be omitted and, when present, MUST be a non-empty array of valid anchor entries. |
 
-**B1 clarification — envelope UTC timestamp.** The envelope `timestamp` MUST satisfy the existing schema `date-time` validation and use `Z`, `z`, or `+00:00` as its UTC suffix. `-00:00` (unknown offset) and nonzero offsets MUST be rejected. Fractional seconds are permitted; neither uppercase `Z` only nor a fixed millisecond precision is required. Other date-time syntax and leap-second handling remain governed by the existing date-time validation, not a new `Date.parse` interpretation. Preserve the signed string; do not normalize it before hashing or signature verification. This suffix rule applies only to the envelope `timestamp`, not automatically to `valid_until` or other timestamp fields. It asserts no trusted time, TTL, or time monotonicity.
-
 #### 3.1.1 Canonical Serialization (JCS / RFC 8785)
 
 Two implementations computing `payload_hash` on the same payload **must** arrive at the same hash. Without a canonical form, `{"a":1,"b":2}` and `{"b":2,"a":1}` would hash differently — and the whole verification chain breaks.
@@ -91,8 +89,6 @@ ProofMeta uses **JCS (JSON Canonicalization Scheme, [RFC 8785](https://www.rfc-e
 - Numbers serialized per ECMAScript `Number.prototype.toString` rules (deterministic)
 - UTF-8 output, no BOM
 - Strings escaped per RFC 8259 with canonical escape sequences
-
-**B1 clarification — transport BOM.** ProofMeta raw JSON ingress for network messages and CLI protocol files MUST reject a leading UTF-8 BOM (`EF BB BF`) before decoding can hide it. Report an unsupported transport input, not a signature failure. This selects rejection rather than the parser permission to ignore a BOM in RFC 8259; it does not redefine that RFC. U+FEFF inside a JSON string remains valid string data. No BOM stripping or automatic transcoding is permitted. This transport rule does not change JCS output, the signing projection, or JSON Schema; an already parsed value cannot establish whether its original transport had a BOM.
 
 **The hashing procedure:**
 
@@ -285,9 +281,7 @@ Inspired by:
 - `terms_hash` — the license text is hashed so agents can verify it hasn't changed since they agreed.
 - `price_hint` (when present) is a *hint*, not a binding price. Actual price is confirmed during the request flow.
 
-**B1 clarification — Manifest scope URL extensions.** For `license_types[].scope`, an entry outside the eight existing core tags MUST parse as an absolute URL under the WHATWG URL parser with no base URL. Reject leading or trailing whitespace and control characters anywhere in the input rather than accepting parser trimming or control-character removal. Keep the original string; do not require equality with a reserialized URL or normalize before signing. There is no HTTPS-only rule, universal host requirement, fetch, or reachability check; syntactically valid absolute `http:`, `https:`, `urn:`, `mailto:`, and other schemes are not rejected merely for their scheme. The existing core-tag minimum and the two existing conflict pairs remain unchanged; the B1 validator default follows the existing SHOULD to reject both conflict pairs, without changing SHOULD to MUST.
-
-**Unresolved, explicitly outside B1: `status.update.policy.scope`.** D14 reuses the scope mechanism, but the precise applicability of Manifest core-tag minimum, conflict-pair validation, and this URL interpretation to `policy.scope` remains open. B1 adds no such semantic checks to that optional field and does not treat passing existing schema validation as proof that this normative question is resolved.
+**Unresolved, explicitly outside B1: `status.update.policy.scope`.** D14 reuses the scope mechanism, but the precise applicability of the Manifest core-tag minimum, conflict-pair validation, and URL-extension interpretation to `policy.scope` remains open. B1 adds no such semantic checks to that optional field and does not treat passing existing schema validation as proof that this normative question is resolved.
 
 ### 3.4 The Status Lifecycle
 

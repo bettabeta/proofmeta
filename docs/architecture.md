@@ -8,8 +8,8 @@ draws the line, so contributions land in the right layer.
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
-│ Applications        agent-xray, AI Checker, marketplaces,     │  ← consume the protocol
-│                     provider/consumer agents                  │
+│ Applications        provider and consumer agents,             │  ← consume the protocol
+│                     marketplaces                              │
 ├─────────────────────────────────────────────────────────────┤
 │ Adapters (Resolvers) identity · storage · payment · anchor    │  ← reference impls, {role,id}
 │                     packages/resolvers/*                      │
@@ -47,7 +47,7 @@ in the core.
 ## Extensions — conventions, no core change
 
 - **Scope URLs** (D11): any condition outside the normative vocabulary is a URL
-  (`https://pandr.de/scope/eu-residency-required`). No core change.
+  (`https://provider.example/scope/region-required`). No core change.
 - **`subject` / `policy` references** on attestations: opaque refs (id, URL,
   hash). The core does not model what a subject *is*.
 - **Item types** (AI agent, dataset, content, API…): catalog metadata, not core
@@ -55,11 +55,8 @@ in the core.
 
 ## Applications — where the value is sold
 
-Discovery engines, dashboards, marketplaces, agents. **agent-xray** (enterprise
-AI asset governance) is the first reference application: it discovers AI assets
-and emits ProofMeta **attestations** as machine-readable, verifiable governance
-and audit evidence. Applications are where ProofMeta meets a buyer — they
-consume the protocol; they are not part of it.
+Discovery engines, dashboards, marketplaces, and agents. They consume the
+protocol. They are not part of it, and they live outside this repository.
 
 ## How to decide where something goes
 
@@ -69,7 +66,7 @@ consume the protocol; they are not part of it.
 | A payment / storage / chain integration | Adapter | `packages/resolvers/<name>/` |
 | A jurisdiction- or domain-specific condition | Extension | a scope URL — no code |
 | A new asset/item kind | Extension | catalog metadata + optional `content_hash` |
-| A product surface (dashboard, scanner, agent) | Application | its own repo / package |
+| A product surface (dashboard, agent) | Application | its own repo / package |
 
 When in doubt: **keep the core small.** It is the most valuable asset precisely
 because it is minimal.
