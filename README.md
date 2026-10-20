@@ -144,6 +144,10 @@ This is a working v1 draft. A provider can publish a manifest, a consumer can re
 
 Planned for v1.1: one payment resolver. Until that ships, the runnable license is `free-attribution`.
 
+## Contributing
+
+See [CONTRIBUTING.md](./CONTRIBUTING.md). Report vulnerabilities in private: [SECURITY.md](./SECURITY.md). History that is not part of the protocol lives in [CHANGELOG.md](./CHANGELOG.md).
+
 ## License
 
 Copyright © 2026 Daud Zulfacar, Pandr UG (haftungsbeschränkt)

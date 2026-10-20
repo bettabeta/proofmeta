@@ -8,7 +8,7 @@
 
 ### B1 package-version reconciliation (2026-10-03)
 
-The directly approved B1 package reconciles version requirements only, plus the bounded UTC/transport-BOM/Manifest-URL clarifications in the master specification and the B1-only conformance-repair exception in `AGENTS.md`. This is a local documentation draft requiring independent review before dependent implementation, not a completed gate or release approval. Original decision date and baseline above remain historical; the B1 drafting basis is `7076fdd86c4a5b44630b97e266c43c8e9aab9e81`.
+The directly approved B1 package reconciles version requirements only, plus the bounded UTC/transport-BOM/Manifest-URL clarifications recorded in `CHANGELOG.md` (removed from `SPEC.md` on 2026-10-20; independent review still pending) and the B1-only conformance-repair exception in `AGENTS.md`. This is a local documentation draft requiring independent review before dependent implementation, not a completed gate or release approval. Original decision date and baseline above remain historical; the B1 drafting basis is `7076fdd86c4a5b44630b97e266c43c8e9aab9e81`.
 
 | Package | B1 basis | B1 target | Reason / condition |
 |---|---|---|---|

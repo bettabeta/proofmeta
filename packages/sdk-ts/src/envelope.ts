@@ -123,7 +123,7 @@ export interface VerifyOptions {
 const ED25519_SIGNATURE = /^ed25519:[a-f0-9]{128}$/;
 /** SPEC §3.1.1: `sha256:` plus 64 lowercase hex chars. */
 const SHA256_REF = /^sha256:[a-f0-9]{64}$/;
-/** SPEC §3.1 B1: envelope timestamp UTC suffix. `-00:00` and nonzero offsets fail. */
+/** Envelope timestamp UTC suffix: `Z`, `z`, or `+00:00`. The 2026-10-03 B1 draft is in CHANGELOG.md; SPEC.md does not currently state this check. */
 const UTC_TIMESTAMP_SUFFIX = /(?:[Zz]|\+00:00)$/;
 
 function reject(reason: string): VerifyResult {
