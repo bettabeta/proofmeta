@@ -1,13 +1,25 @@
-# Publishes one package per pushed tag `<package>@<version>` (e.g. `cli@0.5.1`)
-# via npm trusted publishing (OIDC). No npm token is used or accepted.
-# Requires, per package on npmjs.com: trusted publisher = this repository,
-# workflow `release.yml`, environment `npm-publish`.
-# Tags for dependent packages (cli) only publish once their @proofmeta
-# dependencies satisfy the declared range on npm; re-run the job afterwards.
+# Publishes @proofmeta packages via npm trusted publishing (OIDC). No npm token
+# is used or accepted. Requires, per package on npmjs.com: trusted publisher =
+# this repository, workflow `release.yml`, environment `npm-publish`.
+#
+# Two triggers, same publish path:
+# - a pushed tag `<package>@<version>` (e.g. `cli@0.5.1`) publishes that package;
+# - a push to main that raises `version` in a releasable package.json publishes
+#   every raised package in dependency order, then tags the pushed commit.
+# Tags created here use GITHUB_TOKEN and therefore do not start another run.
+# A version already on npm from this exact commit is skipped, so a failed run
+# can be re-run after a partial publish.
 name: release
 
 on:
   push:
+    branches:
+      - main
+    paths:
+      - packages/spec/package.json
+      - packages/sdk-ts/package.json
+      - packages/resolvers/free/package.json
+      - packages/cli/package.json
     tags:
       - 'spec@*'
       - 'sdk-ts@*'
@@ -21,7 +33,39 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
+  plan:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    outputs:
+      tags: ${{ steps.plan.outputs.tags }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Commit must be on main
+        run: git merge-base --is-ancestor "$GITHUB_SHA" origin/main
+
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 24
+
+      - name: Plan release tags
+        id: plan
+        env:
+          REF_TYPE: ${{ github.ref_type }}
+          REF_NAME: ${{ github.ref_name }}
+          BEFORE: ${{ github.event.before }}
+          SHA: ${{ github.sha }}
+        run: |
+          node scripts/release-plan.mjs >> "$GITHUB_OUTPUT"
+          cat "$GITHUB_OUTPUT"
+
   publish:
+    needs: plan
+    if: needs.plan.outputs.tags != ''
     runs-on: ubuntu-latest
     environment: npm-publish
     permissions:
@@ -30,48 +74,11 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          fetch-depth: 0
           persist-credentials: false
-
-      - name: Tag commit must be on main
-        run: git merge-base --is-ancestor "$GITHUB_SHA" origin/main
 
       - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version: 24
-
-      - name: Resolve package from tag
-        id: release
-        env:
-          TAG: ${{ github.ref_name }}
-        run: node scripts/release-tag.mjs "$TAG" >> "$GITHUB_OUTPUT"
-
-      - name: Version must not exist on npm
-        env:
-          NAME: ${{ steps.release.outputs.name }}
-          VERSION: ${{ steps.release.outputs.version }}
-        run: |
-          code=0
-          out=$(npm view "$NAME@$VERSION" version 2>&1) || code=$?
-          if [ "$code" -eq 0 ] && [ -n "$out" ]; then
-            echo "::error::$NAME@$VERSION is already on npm"
-            exit 1
-          fi
-          if [ "$code" -ne 0 ] && ! grep -q E404 <<<"$out"; then
-            echo "::error::npm view failed: $out"
-            exit 1
-          fi
-
-      - name: '@proofmeta dependencies must already be on npm'
-        env:
-          DEPS: ${{ steps.release.outputs.internal_dependencies }}
-        run: |
-          for spec in $DEPS; do
-            if [ -z "$(npm view "$spec" version)" ]; then
-              echo "::error::$spec is not on npm yet; publish it first, then re-run this job"
-              exit 1
-            fi
-          done
 
       - name: Bounded install (docs/INSTALL.md)
         run: |
@@ -88,6 +95,70 @@ jobs:
 
       - name: Publish
         env:
-          NAME: ${{ steps.release.outputs.name }}
-          DIST_TAG: ${{ steps.release.outputs.dist_tag }}
-        run: npm publish -w "$NAME" --provenance --access public --tag "$DIST_TAG"
+          TAGS: ${{ needs.plan.outputs.tags }}
+          SHA: ${{ github.sha }}
+        run: |
+          for tag in $TAGS; do
+            release=$(node scripts/release-tag.mjs "$tag")
+            name=$(sed -n 's/^name=//p' <<<"$release")
+            version=$(sed -n 's/^version=//p' <<<"$release")
+            dist_tag=$(sed -n 's/^dist_tag=//p' <<<"$release")
+            deps=$(sed -n 's/^internal_dependencies=//p' <<<"$release")
+
+            code=0
+            out=$(npm view "$name@$version" version --prefer-online 2>&1) || code=$?
+            if [ "$code" -eq 0 ] && [ -n "$out" ]; then
+              head=$(npm view "$name@$version" gitHead --prefer-online)
+              if [ "$head" = "$SHA" ]; then
+                echo "::notice::$name@$version is already on npm from $SHA; skipping"
+                continue
+              fi
+              echo "::error::$name@$version is already on npm (gitHead ${head:-missing})"
+              exit 1
+            fi
+            if [ "$code" -ne 0 ] && ! grep -q E404 <<<"$out"; then
+              echo "::error::npm view failed: $out"
+              exit 1
+            fi
+
+            # A dependency published earlier in this loop can take a few minutes to appear.
+            for spec in $deps; do
+              for attempt in $(seq 1 20); do
+                if [ -n "$(npm view "$spec" version --prefer-online 2>/dev/null)" ]; then
+                  continue 2
+                fi
+                sleep 15
+              done
+              echo "::error::$spec is not on npm yet; publish it first, then re-run this job"
+              exit 1
+            done
+
+            npm publish -w "$name" --provenance --access public --tag "$dist_tag"
+          done
+
+  tag:
+    needs: [plan, publish]
+    if: github.ref_type == 'branch' && needs.plan.outputs.tags != ''
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Tag the released commit
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+          TAGS: ${{ needs.plan.outputs.tags }}
+          SHA: ${{ github.sha }}
+        run: |
+          for tag in $TAGS; do
+            if existing=$(gh api "repos/$REPO/git/ref/tags/$tag" --jq .object.sha 2>/dev/null); then
+              if [ "$existing" = "$SHA" ]; then
+                echo "$tag already points at $SHA"
+                continue
+              fi
+              echo "::error::tag $tag already points at $existing, not $SHA"
+              exit 1
+            fi
+            gh api "repos/$REPO/git/refs" -f ref="refs/tags/$tag" -f sha="$SHA" > /dev/null
+            echo "created $tag at $SHA"
+          done
