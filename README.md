@@ -22,6 +22,16 @@ No install, account, or email required:
 
 The generator keeps the private key in your browser and self-checks the signed result. When you are ready to publish, host the downloaded file at `https://your-domain/.well-known/proofmeta.json`.
 
+## What you get today
+
+- A signed manifest identifies the publishing `did:key` and binds each license type to its exact terms through `terms_hash`.
+- Static catalog items can include `content_hash`, so a consumer can compare delivered bytes with the item it licensed.
+- Every license request is a signed envelope that records which consumer requested which item and terms.
+- A provider can answer `DENIED`, suspend a grant with `SUSPENDED`, or permanently withdraw it with `REVOKED`.
+- Anyone with the manifest and request URL can verify the signed lifecycle chain again.
+
+Payment is planned for v1.1; until then, the runnable license is free use with attribution.
+
 ## License a capability you already ship
 
 You have something another agent can use: a tool, a dataset, or a skill pack. ProofMeta is the file you publish so that agent can find it, check who signed the terms, and ask for a license.
@@ -63,7 +73,11 @@ OPEN → PENDING → GRANTED | DENIED
                  SUSPENDED → REVOKED (escalate)
 ```
 
-A signed status either answers a request (**license verdict**) or stands alone (**attestation**: a verdict about a subject against a policy, with no prior request). Domain-specific naming lives in separate `proofmeta-profile-*` repositories. This repository stays generic.
+A signed status answers a license request and records its current lifecycle state.
+
+## Also: attestations
+
+A `status.update` can also stand alone as an attestation: a signed verdict about a subject against a policy, with no prior license request. Attestation histories use the same signed-envelope primitive; see [SPEC.md §3.4.1](./SPEC.md#341-two-modes-of-a-status-chained-verdict-and-root-attestation).
 
 ## Manifest shape
 
@@ -81,7 +95,7 @@ Every artifact is a Signed Envelope. The manifest is the `payload`:
     "request_endpoint": "https://youragent.ai/api/proofmeta/request",
     "catalog_endpoint": "https://youragent.ai/api/proofmeta/catalog",
     "resolvers": [
-      { "role": "payment",  "id": "stripe" },
+      { "role": "payment",  "id": "none" },
       { "role": "delivery", "id": "https" },
       { "role": "anchor",   "id": "none" }
     ],
@@ -103,7 +117,9 @@ Every artifact is a Signed Envelope. The manifest is the `payload`:
 
 A consumer polls `GET {request_endpoint}/{request_id}` for the latest envelope, or `?full=true` for the whole chain. Normative text: [`SPEC.md`](./SPEC.md). Scope tags: [`docs/scope-vocabulary.md`](./docs/scope-vocabulary.md).
 
-The resolver that ships here is the free resolver. A `payment` entry in a manifest names an external resolver; charging is planned for v1.1.
+The resolver that ships here declares `{ "role": "payment", "id": "none" }` and performs no payment.
+
+A payment resolver entry (for example, Stripe) is planned for v1.1.
 
 ## Install
 
@@ -116,6 +132,8 @@ npm install @proofmeta/sdk-ts
 Current package line: `@proofmeta/sdk-ts` 0.6.0, `@proofmeta/cli` 0.6.0, `@proofmeta/spec` 0.4.0, `@proofmeta/resolver-free` 0.3.0. npm publish follows the matching `sdk-ts@` and `cli@` tags.
 
 To build, test, and run the reference provider, consumer, and CLI from a checkout: [docs/INSTALL.md](./docs/INSTALL.md).
+
+The SDK and examples use portable Node.js APIs. Only the repository's pinned post-install smoke check is limited to Linux x64.
 
 ## Repository structure
 
