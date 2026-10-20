@@ -28,7 +28,7 @@ These tags are the full normative set for v1. A `scope` array MUST contain at le
 1. **Presence is permission.** A tag in the `scope` array means the corresponding action is permitted (or, for `*-required` tags, that a corresponding obligation applies). Absence means the protocol makes no machine-level statement either way — the human-readable `terms_url` is authoritative for anything not explicitly tagged.
 2. **Mutually exclusive pairs.** A single `scope` array MUST NOT contain both tags of a mutually-exclusive pair (`commercial` / `non-commercial`, `ai-training-allowed` / `ai-training-excluded`). Validators SHOULD reject manifests that violate this.
 3. **AI training is independent of commercial use.** `commercial` says nothing about `ai-training-*`. A Provider that wants to sell commercial licenses but forbid training data use MUST add `ai-training-excluded` explicitly. This is deliberate: the AI-training question is too load-bearing to infer.
-4. **The core vocabulary is closed for v1.** New core tags are additive only, introduced via a new spec decision (D-entry in §10). Removals or semantic changes are breaking and reserved for a major version bump.
+4. **The core vocabulary is closed for v1.** New core tags are additive only, introduced via a new spec decision (D-entry in §9). Removals or semantic changes are breaking and reserved for a major version bump.
 
 ## URL extensions (non-normative)
 
@@ -72,4 +72,4 @@ A commercial, sub-licensable, revocable license that is additionally constrained
 
 ## Versioning
 
-This document is part of the ProofMeta v1 specification. Changes follow the same lifecycle as the Master Spec's §10 Decided Questions: additive core tags increment the minor version (v1.x), semantic changes require a major version.
+This document is part of the ProofMeta v1 specification. Changes follow the same lifecycle as the Master Spec's §9 Decided Questions: additive core tags increment the minor version (v1.x), semantic changes require a major version.
