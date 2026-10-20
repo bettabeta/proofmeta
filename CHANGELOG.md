@@ -4,6 +4,10 @@ This file records repository history. [`SPEC.md`](./SPEC.md) is the protocol. Te
 
 ## Unreleased
 
+### Specification cleanup (2026-10-20)
+
+`SPEC.md` no longer contains the development-tooling section (Claude Projects, Cursor, OpenClaw, Claude Code, or the scaffold that named `/packages/sdk-py` and `solana-anchor`). Later sections are renumbered: v1 scope is §7, success criteria §8, open questions §9, license §10. Review is not a protocol artifact; the specification does not define one, and the places that listed one no longer do. Schema `$id` values use `https://proofmeta.com/schemas/v1/`.
+
 ### Removed from SPEC.md (2026-10-20)
 
 Three paragraphs drafted on 2026-10-03 as the approved B1 clarification were removed from `SPEC.md`. Independent review of that draft is still pending. They are copied below so the wording is not lost. Removing them does not change the reference SDK or CLI: those packages already enforce the UTC suffix, the transport BOM rejection, and the Manifest scope URL checks. That implementation is now stricter than `SPEC.md`. Restoring the rules as ordinary normative text, or reverting the checks, needs the pending review.

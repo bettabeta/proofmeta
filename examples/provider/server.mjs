@@ -85,7 +85,7 @@ const manifestEnvelope = await createEnvelope({
     provider: {
       id: keypair.did,
       name: "ProofMeta Reference Provider",
-      description: "Tier-1 end-to-end demo per §9 Success Criterion #3.",
+      description: "Tier-1 end-to-end demo per §8 Success Criterion #3.",
     },
     request_endpoint: `${PUBLIC_ORIGIN}/api/proofmeta/request`,
     items: inlineItems, // inline variant — no separate catalog endpoint needed
