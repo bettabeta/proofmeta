@@ -232,5 +232,7 @@ function readBytes(req) {
 for (const sig of ["SIGINT", "SIGTERM"]) {
   process.on(sig, () => {
     server.close(() => process.exit(0));
+    // Node 18's close() leaves idle keep-alive sockets open; Node 19+ closes them.
+    server.closeIdleConnections?.();
   });
 }
