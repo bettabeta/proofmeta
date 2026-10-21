@@ -54,6 +54,24 @@ PROVIDER_ORIGIN=http://127.0.0.1:4100 node examples/consumer/client.mjs
 
 `examples/provider` serves the manifest and grants `free-attribution`. `examples/consumer` is the agent that reads `/.well-known/proofmeta.json` and completes the request. `npm run e2e` runs both.
 
+### Use a licensed capability from your agent
+
+```js
+import { generateKeyPair, requestLicense } from "@proofmeta/sdk-ts";
+
+const keyPair = await generateKeyPair();
+const result = await requestLicense({
+  manifestUrl: "https://example.com/.well-known/proofmeta.json",
+  itemId: "item-001",
+  licenseType: "free-attribution",
+  keyPair,
+  pollTimeoutMs: 30_000,
+});
+if (!result.ok) throw new Error(result.reason);
+```
+
+`requestLicense` fetches and accepts the signed manifest, submits a signed request, polls the provider, and returns only after verifying the returned chain.
+
 ## What is ProofMeta?
 
 ProofMeta is a **protocol**, not a platform. It defines what agents say to each other when licensing content or capabilities. It never defines how money moves, where files are stored, or which blockchain is used.
@@ -129,7 +147,7 @@ From npm:
 npm install @proofmeta/sdk-ts
 ```
 
-Current package line: `@proofmeta/sdk-ts` 0.6.0, `@proofmeta/cli` 0.6.0, `@proofmeta/spec` 0.4.0, `@proofmeta/resolver-free` 0.3.0. npm publish follows the matching `sdk-ts@` and `cli@` tags.
+Current tree versions: `@proofmeta/sdk-ts` 0.7.0, `@proofmeta/cli` 0.6.0, `@proofmeta/spec` 0.4.0, `@proofmeta/resolver-free` 0.3.0. SDK 0.7.0 is not published by this change; npm publishing follows the release workflow.
 
 To build, test, and run the reference provider, consumer, and CLI from a checkout: [docs/INSTALL.md](./docs/INSTALL.md).
 

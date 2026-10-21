@@ -4,6 +4,10 @@ This file records repository history. [`SPEC.md`](./SPEC.md) is the protocol. Te
 
 ## Unreleased
 
+### TypeScript SDK 0.7.0
+
+Added `requestLicense`, a fail-closed consumer helper that accepts a signed manifest with inline items, creates and submits a signed license request, polls the provider, and verifies the returned lifecycle chain. The reference consumer now uses this helper.
+
 ### Specification cleanup (2026-10-20)
 
 `SPEC.md` no longer contains the development-tooling section (Claude Projects, Cursor, OpenClaw, Claude Code, or the scaffold that named `/packages/sdk-py` and `solana-anchor`). Later sections are renumbered: v1 scope is §7, success criteria §8, open questions §9, license §10. Review is not a protocol artifact; the specification does not define one, and the places that listed one no longer do. Schema `$id` values use `https://proofmeta.com/schemas/v1/`.

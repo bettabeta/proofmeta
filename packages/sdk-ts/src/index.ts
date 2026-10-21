@@ -17,6 +17,12 @@ export {
 } from "./did-key.js";
 export { generateKeyPair, keyPairFromPrivate, type KeyPair } from "./keys.js";
 export {
+  requestLicense,
+  type LicenseChain,
+  type RequestLicenseOptions,
+  type RequestLicenseResult,
+} from "./consumer.js";
+export {
   createEnvelope,
   updateStatus,
   createAttestation,
