@@ -75,6 +75,41 @@
   }
   nav.top .brand-logo { height: 44px; width: auto; display: block; }
   nav.top a.brand:hover .brand-logo { opacity: 0.88; }
+  nav.top .menu-toggle {
+    display: none;
+    width: 44px;
+    height: 44px;
+    padding: 0;
+    border: 1px solid var(--hairline);
+    background: transparent;
+    color: var(--ink);
+    cursor: pointer;
+    align-items: center;
+    justify-content: center;
+  }
+  nav.top .menu-toggle:hover { border-color: var(--amber); color: var(--amber); }
+  nav.top .menu-toggle:focus-visible { outline: 2px solid var(--amber); outline-offset: 3px; }
+  nav.top .menu-icon,
+  nav.top .menu-icon::before,
+  nav.top .menu-icon::after {
+    display: block;
+    width: 20px;
+    height: 2px;
+    background: currentColor;
+    transition: transform .18s ease, opacity .18s ease;
+  }
+  nav.top .menu-icon { position: relative; }
+  nav.top .menu-icon::before,
+  nav.top .menu-icon::after {
+    content: '';
+    position: absolute;
+    left: 0;
+  }
+  nav.top .menu-icon::before { top: -6px; }
+  nav.top .menu-icon::after { top: 6px; }
+  nav.top .menu-toggle[aria-expanded="true"] .menu-icon { background: transparent; }
+  nav.top .menu-toggle[aria-expanded="true"] .menu-icon::before { transform: translateY(6px) rotate(45deg); }
+  nav.top .menu-toggle[aria-expanded="true"] .menu-icon::after { transform: translateY(-6px) rotate(-45deg); }
   nav.top .links { display: flex; gap: 20px; color: var(--muted); flex-wrap: wrap; }
   nav.top .links a { text-decoration: none; }
   nav.top .links a:hover { color: var(--ink); }
@@ -515,6 +550,22 @@
     .artefact:nth-last-child(-n+2) { border-bottom: 0; }
   }
   @media (max-width: 720px) {
+    nav.top { padding: 10px 0; }
+    nav.top .wrap { gap: 10px; }
+    .nav-ready nav.top .menu-toggle { display: inline-flex; }
+    nav.top .links {
+      flex: 1 0 100%;
+      flex-direction: column;
+      gap: 0;
+      padding-top: 8px;
+      border-top: 1px solid var(--hairline);
+    }
+    .nav-ready nav.top .links:not(.is-open) { display: none; }
+    nav.top .links a {
+      padding: 11px 0;
+      border-bottom: 1px dashed var(--hairline);
+    }
+    nav.top .links a:last-child { border-bottom: 0; }
     .proof { grid-template-columns: 1fr; }
     .rail { grid-template-columns: 1fr; gap: 8px; }
     header.hero { padding: 56px 0 48px; }
@@ -533,6 +584,9 @@
 
   @media (prefers-reduced-motion: reduce) {
     .btn, .btn:hover { transition: none; transform: none; box-shadow: none; }
+    nav.top .menu-icon,
+    nav.top .menu-icon::before,
+    nav.top .menu-icon::after { transition: none; }
     html { scroll-behavior: auto; }
   }
 </style>
@@ -544,7 +598,10 @@
     <a class="brand" href="#hero" aria-label="ProofMeta Protocol">
       <img class="brand-logo" src="assets/proofmeta-logo.png" alt="ProofMeta" width="264" height="44">
     </a>
-    <div class="links">
+    <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="primary-links" aria-label="Open navigation">
+      <span class="menu-icon" aria-hidden="true"></span>
+    </button>
+    <div class="links" id="primary-links">
       <a href="/generate">publish a policy</a>
       <a href="/verify">verify</a>
       <a href="#problem">the problem</a>
@@ -897,5 +954,6 @@ SUSPENDED → REVOKED (terminal)</pre>
   </div>
 </footer>
 
+<script src="/navigation.js"></script>
 </body>
 </html>
