@@ -105,6 +105,33 @@
   .subhead strong { color: var(--ink); font-weight: 500; }
 
   .cta-row { display: flex; gap: 12px; flex-wrap: wrap; align-items: center; }
+
+  .audiences {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0;
+    border: 1px solid var(--hairline);
+    max-width: 900px;
+  }
+  .audience {
+    padding: 26px 28px;
+    background: var(--surface);
+    border-right: 1px solid var(--hairline);
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+  .audience:last-child { border-right: 0; }
+  .audience .a-tag { font-size: 11px; letter-spacing: .18em; text-transform: uppercase; color: var(--amber); }
+  .audience h2 { font-size: 20px; margin: 0; max-width: none; }
+  .audience p { font-size: 13px; margin: 0; max-width: none; }
+  .audience ul { margin: 0; padding: 0; list-style: none; font-size: 13px; color: var(--muted); }
+  .audience li { padding: 5px 0; border-top: 1px dashed var(--hairline); }
+  .audience li:first-child { border-top: 0; padding-top: 0; }
+  .audience pre.code { margin: 0; padding: 14px 16px; font-size: 12px; }
+  .audience .cta-row { margin-top: auto; padding-top: 6px; }
+  .audience .cta-row .btn { padding: 12px 16px; font-size: 13px; }
+
   .btn {
     display: inline-flex; align-items: center; gap: 10px;
     padding: 14px 20px;
@@ -500,6 +527,9 @@
     .ecosystem { border-right: 0; border-bottom: 1px solid var(--hairline); }
     .ecosystem:last-child { border-bottom: 0; }
     .scenario { grid-template-columns: 1fr; gap: 8px; }
+    .audiences { grid-template-columns: 1fr; }
+    .audience { border-right: 0; border-bottom: 1px solid var(--hairline); }
+    .audience:last-child { border-bottom: 0; }
   }
 
   @media (prefers-reduced-motion: reduce) {
@@ -516,12 +546,12 @@
       <img class="brand-logo" src="assets/proofmeta-logo.png" alt="ProofMeta" width="264" height="44">
     </a>
     <div class="links">
+      <a href="/generate">publish a policy</a>
+      <a href="/verify">verify</a>
       <a href="#problem">the problem</a>
       <a href="#ecosystem">protocol · sdk · pandr</a>
       <a href="#architecture">architecture</a>
       <a href="#spec">spec →</a>
-      <a href="/generate">generator</a>
-      <a href="/verify">verifier</a>
     </div>
   </div>
 </nav>
@@ -540,10 +570,32 @@
 
     <p class="subhead">ProofMeta is an open protocol for machine-readable licensing, permissions and usage policies — so agents and autonomous systems can discover, verify and act on rights at scale. <strong>Apache 2.0. Chain-agnostic. Specification, not SaaS.</strong></p>
 
-    <div class="cta-row">
-      <a class="btn" href="/generate">Publish your AI policy in 60 seconds →</a>
-      <a class="btn ghost" href="/verify">Verify a manifest</a>
-      <a class="btn ghost" href="#spec">Read the spec</a>
+    <div class="audiences" aria-label="Choose your path">
+      <div class="audience" id="for-publishers">
+        <div class="a-tag">You publish content, data or tools</div>
+        <h2>Tell AI agents what they may do with it.</h2>
+        <p>One signed file on your domain. No account, no server, no code. Your key never leaves the browser.</p>
+        <ul>
+          <li>Pick what you allow: commercial use, derivatives, AI training, attribution</li>
+          <li>Download <code>proofmeta.json</code>, upload it to <code>/.well-known/</code></li>
+          <li>Any agent can now find and verify your terms</li>
+        </ul>
+        <div class="cta-row">
+          <a class="btn" href="/generate">Publish your policy →</a>
+          <a class="btn ghost" href="/verify?url=/.well-known/proofmeta.json">See a live example</a>
+        </div>
+      </div>
+      <div class="audience" id="for-developers">
+        <div class="a-tag">You build agents or APIs</div>
+        <h2>Read, request and verify rights in code.</h2>
+        <p>TypeScript SDK and validator CLI on npm. Signed envelopes, <code>did:key</code>, JCS hashing, fail-closed acceptance.</p>
+<pre class="code"><span class="k">$</span> npm install <span class="s">@proofmeta/sdk-ts</span>
+<span class="k">$</span> npx <span class="s">@proofmeta/cli</span> validate proofmeta.json</pre>
+        <div class="cta-row">
+          <a class="btn" href="#spec">Read the spec →</a>
+          <a class="btn ghost" href="https://github.com/bettabeta/proofmeta" target="_blank" rel="noopener">GitHub</a>
+        </div>
+      </div>
     </div>
   </div>
 </header>
