@@ -115,6 +115,34 @@
 
   footer { border-top: 1px solid var(--hairline); margin-top: 64px; padding: 28px 0 48px; color: var(--muted); font-size: 13px; }
   .hidden { display: none !important; }
+
+  .mode-switch { display: inline-flex; border: 1px solid var(--hairline); border-radius: 8px; overflow: hidden; margin: 18px 0 0; }
+  .mode-switch button { border: 0; border-radius: 0; background: transparent; color: var(--muted); padding: 9px 18px; font-size: 13px; }
+  .mode-switch button:hover { color: var(--ink); }
+  .mode-switch button[aria-pressed="true"] { background: var(--amber); color: var(--bg); font-weight: 700; }
+  .mode-switch button + button { border-left: 1px solid var(--hairline); }
+
+  .presets { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 10px; margin-top: 8px; }
+  .preset { border: 1px solid var(--hairline); border-radius: 6px; padding: 12px 14px; cursor: pointer; display: block; margin: 0; color: var(--ink); background: var(--bg); }
+  .preset:hover { border-color: var(--amber); }
+  .preset input { position: absolute; opacity: 0; pointer-events: none; }
+  .preset.selected { border-color: var(--amber); box-shadow: inset 0 0 0 1px var(--amber); }
+  .preset .p-name { font-weight: 700; font-size: 14px; }
+  .preset .p-summary { color: var(--muted); font-size: 12.5px; margin: 4px 0 8px; line-height: 1.5; }
+  .preset .p-tags { display: flex; flex-wrap: wrap; gap: 4px; }
+  .preset .p-tags span { font-size: 11px; border: 1px solid var(--hairline); border-radius: 4px; padding: 1px 6px; color: var(--muted); }
+  .preset .p-tags span.no { border-color: rgba(198,91,78,.5); color: var(--red); }
+  .preset .p-tags span.yes { border-color: rgba(123,160,91,.5); color: var(--green); }
+
+  .files { list-style: none; padding: 0; margin: 12px 0; font-size: 13px; }
+  .files li { display: flex; gap: 12px; align-items: center; padding: 8px 0; border-bottom: 1px solid var(--hairline); flex-wrap: wrap; }
+  .files li:last-child { border-bottom: 0; }
+  .files code { color: var(--ink); }
+  .files .what { color: var(--muted); flex: 1; min-width: 200px; }
+  .files button { margin-left: auto; }
+  pre.readme { background: var(--bg); border: 1px solid var(--hairline); border-radius: 6px; padding: 12px; font-size: 12px; color: var(--ink); overflow-x: auto; white-space: pre-wrap; max-height: 320px; overflow-y: auto; }
+  .check-row { display: flex; gap: 8px; align-items: center; margin: 14px 0 4px; font-size: 13px; color: var(--ink); cursor: pointer; }
+  .check-row input { accent-color: var(--amber); }
 </style>
 </head>
 <body>
@@ -131,9 +159,71 @@
 <header class="wrap">
   <h1>Manifest Generator</h1>
   <p class="lede">Declare — in a <strong>signed, machine-readable file</strong> — what AI agents may do with your content. Everything below runs in your browser: <strong>your keys never leave this page</strong>. No account, no server, no tracking.</p>
+  <div class="mode-switch" role="group" aria-label="Generator mode">
+    <button type="button" id="mode-simple-btn" aria-pressed="true">Simple — pick a policy</button>
+    <button type="button" id="mode-advanced-btn" aria-pressed="false">Advanced — full manifest</button>
+  </div>
 </header>
 
 <main class="wrap">
+
+<div id="mode-simple">
+
+  <section class="step" id="s-who">
+    <h2><span class="n">1</span> · Who you are</h2>
+    <p class="hint">The name agents will see, and the site the policy covers. Everything you publish there falls under it unless you add items in Advanced mode later.</p>
+    <label for="s-name">Your name or organisation <span class="req">*</span></label>
+    <input type="text" id="s-name" placeholder="Example Press" autocomplete="organization">
+    <label for="s-origin">Your site <span class="req">*</span></label>
+    <input type="url" id="s-origin" placeholder="https://example.com" autocomplete="url" spellcheck="false">
+    <label for="s-contact">Contact for license requests <span style="color:var(--muted)">(optional — email or URL)</span></label>
+    <input type="text" id="s-contact" placeholder="licensing@example.com" autocomplete="email" spellcheck="false">
+  </section>
+
+  <section class="step" id="s-policy">
+    <h2><span class="n">2</span> · What agents may do</h2>
+    <p class="hint">Four common policies. Each one is a fixed set of protocol scope tags plus a plain-language terms text you can edit before publishing. Need something else? Switch to Advanced.</p>
+    <div class="presets" id="preset-list" role="radiogroup" aria-label="Policy preset"></div>
+  </section>
+
+  <section class="step" id="s-key">
+    <h2><span class="n">3</span> · Your key</h2>
+    <p class="hint">The policy is signed with a key that is created here, in your browser. The key is your identity; keep its backup to change the policy later under the same identity.</p>
+    <label class="check-row"><input type="checkbox" id="s-havekey"> I already have a key backup file</label>
+    <div id="s-keyimport" class="hidden">
+      <label for="s-keyfile">Key backup (<code>proofmeta-key-….json</code>, plain or encrypted)</label>
+      <input type="file" id="s-keyfile" accept="application/json,.json">
+      <div id="s-keyloaded" class="did-box hidden"><span class="tag">author</span> <span id="s-keydid"></span></div>
+    </div>
+    <label for="s-pass">Passphrase for the key backup <span style="color:var(--muted)">(recommended, 8+ characters; leave empty for a plaintext backup)</span></label>
+    <input type="password" id="s-pass" autocomplete="new-password" placeholder="••••••••">
+  </section>
+
+  <section class="step" id="s-go">
+    <h2><span class="n">4</span> · Create and publish</h2>
+    <p class="hint">You get three files to upload and one key backup to keep. The manifest is checked against the protocol's own acceptance rules before anything is offered for download.</p>
+    <button id="s-create" class="primary">Create my policy</button>
+    <div id="s-err" class="err hidden"></div>
+    <div id="s-result" class="hidden" style="margin-top:20px">
+      <div id="s-verdict"></div>
+      <div class="did-box"><span class="tag">author</span> <span id="s-did"></span></div>
+      <ul class="files" id="s-files"></ul>
+      <div class="row" style="margin-top:12px">
+        <button id="s-zip" class="primary fixed">Download everything (.zip)</button>
+        <button id="s-keybackup" class="fixed">Download key backup</button>
+        <a id="s-verify" class="fixed" href="/verify" style="font-size:13px">Check it in the Verifier after upload →</a>
+      </div>
+      <p class="warn" id="s-keywarn"></p>
+      <div class="hosting">
+        <p><strong style="color:var(--ink)">Publish it:</strong> upload <code>.well-known/proofmeta.json</code>, the terms file and <code>requests.html</code> to your site, keeping the paths. Do not upload the key. Platform notes:</p>
+        <pre class="readme" id="s-readme"></pre>
+      </div>
+    </div>
+  </section>
+
+</div>
+
+<div id="mode-advanced" class="hidden">
 
   <section class="step" id="step-identity">
     <h2><span class="n">1</span> · Your signing identity</h2>
@@ -143,19 +233,25 @@
       <button id="btn-togimport">Import existing key</button>
     </div>
     <div id="import-box" class="hidden">
-      <label for="import-seed">Private key seed (64 hex characters)</label>
+      <label for="import-file">Key backup file (plain or encrypted, from this page or <code>proofmeta keygen</code>)</label>
+      <div class="row">
+        <input type="file" id="import-file" accept="application/json,.json">
+        <input type="password" id="import-pass" autocomplete="off" placeholder="passphrase, if the file is encrypted">
+      </div>
+      <label for="import-seed">… or the raw private key seed (64 hex characters)</label>
       <input type="text" id="import-seed" autocomplete="off" spellcheck="false" placeholder="e.g. 9d61b19d…">
       <div class="row" style="margin-top:10px">
-        <button id="btn-import" class="fixed">Load key</button>
+        <button id="btn-import" class="fixed">Load seed</button>
       </div>
     </div>
     <div id="key-info" class="hidden">
       <div class="did-box"><span class="tag">author</span> <span id="did-value"></span></div>
       <div class="row" style="margin-top:12px">
+        <input type="password" id="backup-pass" autocomplete="new-password" placeholder="backup passphrase (optional, 8+ chars)">
         <button id="btn-downloadkey" class="fixed small">Download key backup</button>
         <button id="btn-copydid" class="fixed small">Copy DID</button>
       </div>
-      <p class="warn">⚠ Back up the private key now. It exists only in this browser tab. Losing it means losing control of this identity; anyone who has it can sign in your name.</p>
+      <p class="warn">⚠ Back up the private key now. It exists only in this browser tab. Losing it means losing control of this identity; anyone who has it can sign in your name. With a passphrase the backup is encrypted (PBKDF2 + AES-GCM) and still opens in the CLI.</p>
     </div>
     <div id="key-err" class="err hidden"></div>
   </section>
@@ -239,15 +335,20 @@ location = /.well-known/proofmeta.json {
     </div>
   </section>
 
+</div>
+
 </main>
 
 <footer>
   <div class="wrap">
-    ProofMeta Protocol — open, Apache-2.0, chain-agnostic. <a href="https://github.com/bettabeta/proofmeta" rel="noopener">Spec &amp; SDK on GitHub</a>.
+    ProofMeta Protocol — open, Apache-2.0, chain-agnostic. <a href="https://github.com/bettabeta/proofmeta" rel="noopener">Spec &amp; SDK on GitHub</a>. Prefer a terminal? <code>npx @proofmeta/cli init</code> produces the same files.
   </div>
 </footer>
 
 <script src="/tools/proofmeta-tools.min.js"></script>
+<script src="/generate/presets.js"></script>
+<script src="/generate/keyfile.js"></script>
+<script src="/generate/zip.js"></script>
 <script src="/generate/app.js"></script>
 
 </body>

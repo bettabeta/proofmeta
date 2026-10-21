@@ -16,6 +16,181 @@
 
   let keyPair = null;
 
+  // ── Mode switch ───────────────────────────────────────────────────────
+  function setMode(mode) {
+    const simple = mode === "simple";
+    $("mode-simple").classList.toggle("hidden", !simple);
+    $("mode-advanced").classList.toggle("hidden", simple);
+    $("mode-simple-btn").setAttribute("aria-pressed", String(simple));
+    $("mode-advanced-btn").setAttribute("aria-pressed", String(!simple));
+    if (location.hash !== (simple ? "" : "#advanced")) history.replaceState(null, "", simple ? location.pathname : "#advanced");
+  }
+  $("mode-simple-btn").addEventListener("click", () => setMode("simple"));
+  $("mode-advanced-btn").addEventListener("click", () => setMode("advanced"));
+  setMode(location.hash === "#advanced" ? "advanced" : "simple");
+
+  // ── Simple mode ───────────────────────────────────────────────────────
+  const { PRESETS, termsText, requestsHtml, hostingReadme } = ProofMetaPresets;
+  const esc = (t) => String(t).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+  let simpleKey = null;      // imported key, or null → generate on create
+  let simpleOut = null;      // { files: Map, origin, keyPair }
+
+  function renderPresets() {
+    const list = $("preset-list");
+    list.innerHTML = PRESETS.map((p, i) => `
+      <label class="preset${i === 1 ? " selected" : ""}">
+        <input type="radio" name="preset" value="${p.id}"${i === 1 ? " checked" : ""}>
+        <div class="p-name">${esc(p.name)}</div>
+        <div class="p-summary">${esc(p.summary)}</div>
+        <div class="p-tags">${p.scope.map((t) => `<span class="${t.endsWith("-excluded") || t === "non-commercial" || t === "revocable" ? "no" : "yes"}">${t}</span>`).join("")}</div>
+      </label>`).join("");
+    list.querySelectorAll("input").forEach((r) => r.addEventListener("change", () => {
+      list.querySelectorAll(".preset").forEach((l) => l.classList.toggle("selected", l.querySelector("input").checked));
+    }));
+  }
+  renderPresets();
+
+  function simpleError(msg) {
+    $("s-err").textContent = msg;
+    $("s-err").classList.remove("hidden");
+    $("s-result").classList.add("hidden");
+  }
+
+  $("s-havekey").addEventListener("change", () => {
+    $("s-keyimport").classList.toggle("hidden", !$("s-havekey").checked);
+    if (!$("s-havekey").checked) { simpleKey = null; $("s-keyloaded").classList.add("hidden"); }
+  });
+  $("s-keyfile").addEventListener("change", async () => {
+    const file = $("s-keyfile").files[0];
+    if (!file) return;
+    try {
+      simpleKey = await loadKeyFile(await file.text(), () => $("s-pass").value);
+      $("s-keydid").textContent = simpleKey.did;
+      $("s-keyloaded").classList.remove("hidden");
+      $("s-err").classList.add("hidden");
+    } catch (e) {
+      simpleKey = null;
+      $("s-keyloaded").classList.add("hidden");
+      simpleError("Key backup: " + e.message + (ProofMetaKeyFile.isEncrypted(safeJson(await file.text())) ? " — enter the passphrase in step 3 first, then choose the file again." : ""));
+    }
+  });
+  function safeJson(text) { try { return JSON.parse(text); } catch { return null; } }
+  async function loadKeyFile(text, getPassphrase) {
+    const value = safeJson(text);
+    if (!value) throw new Error("not a JSON file");
+    const priv = await ProofMetaKeyFile.privateKeyFrom(value, async () => getPassphrase());
+    const kp = await ProofMeta.keyPairFromPrivate(priv);
+    if (typeof value.did === "string" && value.did !== kp.did) throw new Error("file DID does not match its private key");
+    return kp;
+  }
+
+  function normalizeOrigin(input) {
+    if (!String(input).trim()) throw new Error("Step 1: enter your site address (the field is empty; the grey text is only an example).");
+    let url;
+    try { url = new URL(String(input).trim()); } catch { throw new Error("Your site must be a full address such as https://example.com"); }
+    if (url.protocol !== "https:" && url.protocol !== "http:") throw new Error("Your site must start with https://");
+    if (url.username || url.password || url.search || url.hash || (url.pathname !== "/" && url.pathname !== "")) throw new Error("Enter only the site address, without a path (https://example.com, not https://example.com/blog)");
+    return url.origin;
+  }
+  function normalizeContact(input) {
+    const raw = String(input || "").trim();
+    if (!raw) return undefined;
+    const candidate = /^[^\s@/:]+@[^\s@/]+\.[^\s@/]+$/.test(raw) ? "mailto:" + raw : raw;
+    let url;
+    try { url = new URL(candidate); } catch { throw new Error("Contact must be an email address or a full URL"); }
+    if (!["mailto:", "https:", "http:"].includes(url.protocol)) throw new Error("Contact must be an email address or an https:// URL");
+    return url.href;
+  }
+
+  $("s-create").addEventListener("click", async () => {
+    $("s-err").classList.add("hidden");
+    try {
+      const publisher = $("s-name").value.trim();
+      if (!publisher) throw new Error("Step 1: your name or organisation is required.");
+      const origin = normalizeOrigin($("s-origin").value);
+      const contact = normalizeContact($("s-contact").value);
+      const preset = PRESETS.find((p) => p.id === document.querySelector('input[name="preset"]:checked')?.value);
+      if (!preset) throw new Error("Step 2: choose a policy.");
+      const pass = $("s-pass").value;
+      if (pass && pass.length < 8) throw new Error("Step 3: the passphrase needs at least 8 characters, or leave it empty.");
+      if ($("s-havekey").checked && !simpleKey) throw new Error("Step 3: choose your key backup file, or untick the box to create a new key.");
+      const kp = simpleKey || await ProofMeta.generateKeyPair();
+
+      const date = new Date().toISOString().slice(0, 10);
+      const licenseId = preset.id;
+      const termsPath = `.well-known/proofmeta-terms/${licenseId}.txt`;
+      const terms = termsText({ preset, publisher, origin, date });
+      const termsUrl = `${origin}/${termsPath}`;
+      const payload = {
+        type: "manifest",
+        provider: { id: kp.did, name: publisher },
+        request_endpoint: `${origin}/requests.html`,
+        items: [{ item_id: "site-content", name: `Content published at ${origin}`, description: `Everything ${publisher} publishes at ${origin}, unless an item states otherwise.`, available_licenses: [licenseId] }],
+        license_types: [{ id: licenseId, name: preset.name, terms_url: termsUrl, terms_hash: ProofMeta.sha256Ref(new TextEncoder().encode(terms)), scope: [...preset.scope] }],
+      };
+      const envelope = await ProofMeta.createEnvelope({ payload, author: kp.did, privateKey: kp.privateKey });
+      const manifestJson = JSON.stringify(envelope, null, 2) + "\n";
+      const report = await ProofMeta.acceptProtocolInput(
+        { kind: "bytes", bytes: new TextEncoder().encode(manifestJson) },
+        { operation: "manifest", purpose: "protocol-conformance" },
+      );
+      const v = $("s-verdict");
+      if (!report.accepted) {
+        v.className = "verdict fail";
+        v.textContent = "✗ self-check failed: " + report.errors.map((e) => `${e.code} at ${e.path || "/"}`).join("; ");
+        $("s-result").classList.remove("hidden");
+        $("s-files").innerHTML = "";
+        simpleOut = null;
+        return;
+      }
+      v.className = "verdict pass";
+      v.textContent = "✓ self-check passed — signed, hashed, schema-valid, scope-valid";
+
+      const files = new Map([
+        [".well-known/proofmeta.json", manifestJson],
+        [termsPath, terms],
+        ["requests.html", requestsHtml({ publisher, origin, preset, contact, termsUrl })],
+        ["README.txt", hostingReadme({ origin, licenseId, keyFile: "proofmeta-key.json (your backup)" })],
+      ]);
+      simpleOut = { files, origin, keyPair: kp, pass };
+      $("s-did").textContent = kp.did;
+      const what = { ".well-known/proofmeta.json": "the signed policy — upload", [termsPath]: "terms text the policy hashes — upload (edit first if you like, then re-create)", "requests.html": "where agents are sent to ask — upload", "README.txt": "hosting notes — keep" };
+      $("s-files").innerHTML = [...files.keys()].map((name) => `<li><code>${esc(name)}</code><span class="what">${esc(what[name])}</span><button type="button" class="small" data-file="${esc(name)}">download</button></li>`).join("");
+      $("s-files").querySelectorAll("button").forEach((b) => b.addEventListener("click", () => download(b.dataset.file.split("/").pop(), files.get(b.dataset.file), b.dataset.file.endsWith(".json") ? "application/json" : b.dataset.file.endsWith(".html") ? "text/html" : "text/plain")));
+      $("s-verify").href = "/verify?url=" + encodeURIComponent(`${origin}/.well-known/proofmeta.json`);
+      $("s-readme").textContent = files.get("README.txt");
+      $("s-keywarn").textContent = simpleKey
+        ? "Signed with your imported key. Keep its backup."
+        : pass
+          ? "⚠ Download the key backup now. It is encrypted with your passphrase; without the file and the passphrase you cannot change this policy under the same identity."
+          : "⚠ Download the key backup now and keep it private. It is NOT encrypted — set a passphrase in step 3 and create again for an encrypted backup.";
+      $("s-result").classList.remove("hidden");
+      $("s-result").scrollIntoView({ behavior: "smooth", block: "nearest" });
+      $("s-pass").value = "";
+    } catch (e) {
+      simpleError(e.message);
+    }
+  });
+
+  async function keyBackupJson(kp, pass) {
+    const file = pass ? await ProofMetaKeyFile.encrypt(kp, pass) : ProofMetaKeyFile.plain(kp);
+    return JSON.stringify(file, null, 2) + "\n";
+  }
+  $("s-keybackup").addEventListener("click", async () => {
+    if (!simpleOut) return;
+    try { download("proofmeta-key-" + simpleOut.keyPair.did.slice(-8) + ".json", await keyBackupJson(simpleOut.keyPair, simpleOut.pass)); }
+    catch (e) { simpleError("Key backup failed: " + e.message); }
+  });
+  $("s-zip").addEventListener("click", async () => {
+    if (!simpleOut) return;
+    try {
+      const entries = [...simpleOut.files].map(([name, data]) => ({ name, data }));
+      entries.push({ name: "proofmeta-key.json", data: await keyBackupJson(simpleOut.keyPair, simpleOut.pass) });
+      const host = new URL(simpleOut.origin).hostname;
+      download(`proofmeta-${host}.zip`, ProofMetaZip.build(entries), "application/zip");
+    } catch (e) { simpleError("Zip failed: " + e.message); }
+  });
+
   // ── Identity ──────────────────────────────────────────────────────────
   function showKey() {
     $("did-value").textContent = keyPair.did;
@@ -38,14 +213,21 @@
     try { keyPair = await ProofMeta.keyPairFromPrivate(ProofMeta.hexToBytes(hex)); $("import-seed").value = ""; showKey(); }
     catch (e) { keyError("Import failed: " + e.message); }
   });
-  $("btn-downloadkey").addEventListener("click", () => {
-    const backup = {
-      warning: "PRIVATE KEY — keep secret. Anyone with this file can sign as your DID.",
-      did: keyPair.did,
-      private_key_hex: ProofMeta.bytesToHex(keyPair.privateKey),
-      created: new Date().toISOString(),
-    };
-    download("proofmeta-key-" + keyPair.did.slice(-8) + ".json", JSON.stringify(backup, null, 2));
+  $("import-file").addEventListener("change", async () => {
+    const file = $("import-file").files[0];
+    if (!file) return;
+    try { keyPair = await loadKeyFile(await file.text(), () => $("import-pass").value); $("import-pass").value = ""; showKey(); }
+    catch (e) { keyError("Import failed: " + e.message); }
+    $("import-file").value = "";
+  });
+  $("btn-downloadkey").addEventListener("click", async () => {
+    const pass = $("backup-pass").value;
+    if (pass && pass.length < 8) return keyError("Backup passphrase needs at least 8 characters, or leave it empty for a plaintext backup.");
+    try {
+      download("proofmeta-key-" + keyPair.did.slice(-8) + ".json", await keyBackupJson(keyPair, pass));
+      $("backup-pass").value = "";
+      $("key-err").classList.add("hidden");
+    } catch (e) { keyError("Backup failed: " + e.message); }
   });
   $("btn-copydid").addEventListener("click", () => navigator.clipboard.writeText(keyPair.did));
 
@@ -238,8 +420,8 @@
   $("btn-download").addEventListener("click", () => download("proofmeta.json", currentJson));
   $("btn-copy").addEventListener("click", () => navigator.clipboard.writeText(currentJson));
 
-  function download(filename, text) {
-    const url = URL.createObjectURL(new Blob([text], { type: "application/json" }));
+  function download(filename, data, type = "application/json") {
+    const url = URL.createObjectURL(new Blob([data], { type }));
     const a = document.createElement("a");
     a.href = url; a.download = filename; a.click();
     URL.revokeObjectURL(url);
