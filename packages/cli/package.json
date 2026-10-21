@@ -18,7 +18,7 @@
     "test": "node --test test/*.test.mjs"
   },
   "dependencies": {
-    "@proofmeta/sdk-ts": "^0.6.0",
+    "@proofmeta/sdk-ts": "^0.7.0",
     "@proofmeta/spec": "^0.4.0",
     "ajv": "^8.17.1",
     "ajv-formats": "^3.0.1"

@@ -10,6 +10,24 @@ Chain-agnostic. No payment, delivery, or anchor code in core — those live behi
 npm install @proofmeta/sdk-ts
 ```
 
+## Consume a manifest
+
+```js
+import { generateKeyPair, requestLicense } from "@proofmeta/sdk-ts";
+
+const keyPair = await generateKeyPair();
+const result = await requestLicense({
+  manifestUrl: "https://example.com/.well-known/proofmeta.json",
+  itemId: "item-001",
+  licenseType: "free-attribution",
+  keyPair,
+  pollTimeoutMs: 30_000,
+});
+if (!result.ok) throw new Error(result.reason);
+```
+
+`requestLicense` accepts manifests with inline `items`. It returns a verified `GRANTED` chain or `{ ok: false, reason }`; protocol and network failures do not throw.
+
 ## API surface
 
 Anything received from the network or a file goes through `acceptProtocolInput`. That is the only function that reports `accepted`.
@@ -87,3 +105,5 @@ Requires Node >=18 and targets ES2022. On Node 18, crypto may require `NODE_OPTI
 Build/dev pins: `@proofmeta/spec` 0.4.0, Ajv 8.18.0, ajv-formats 3.0.1, esbuild 0.28.2 and TypeScript 5.7.3. They are not SDK runtime dependencies. The lock resolves Ajv's transitive fast-uri to 3.1.8 (including nested instances). CLI/demos consume the SDK, never the reverse. Building from a monorepo checkout: [docs/INSTALL.md](../../docs/INSTALL.md). Guarantees and trust prerequisites of the pinned install: [docs/SUPPLY-CHAIN.md](../../docs/SUPPLY-CHAIN.md). Pinned-artifact notices: [THIRD-PARTY-NOTICES.md](./THIRD-PARTY-NOTICES.md).
 
 `@proofmeta/sdk-ts@0.6.0` keeps that split. `verifyEnvelope` and `verifyChain` fail closed on malformed input: signature syntax, the envelope timestamp UTC suffix, and `payload_hash` syntax return `{ ok: false, reason }` before crypto. They still do not report `accepted`.
+
+`@proofmeta/sdk-ts@0.7.0` adds `requestLicense`, a fail-closed consumer flow for accepted manifests with inline items.

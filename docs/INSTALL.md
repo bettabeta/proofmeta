@@ -6,7 +6,7 @@
 npm install @proofmeta/sdk-ts
 ```
 
-See the [reference consumer](../examples/consumer/client.mjs) for the current manifest-to-license flow.
+See [Consume a manifest](../packages/sdk-ts/README.md#consume-a-manifest) for the manifest-to-license helper and the [reference consumer](../examples/consumer/client.mjs) for a runnable example.
 
 The SDK and examples use portable Node.js APIs. The pinned post-install smoke check below is Linux x64 only because it directly verifies the `@esbuild/linux-x64` binary. On Node 18, prefix test and CLI commands with `NODE_OPTIONS=--experimental-global-webcrypto`.
 

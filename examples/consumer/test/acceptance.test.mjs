@@ -91,7 +91,7 @@ async function scenario(mode) {
   const origin = `http://127.0.0.1:${server.address().port}`;
   manifest = await sign(provider, { type: 'manifest', provider: { id: provider.did }, request_endpoint: `${origin}/requests`, items: [{ item_id: 'item', name: 'Item', available_licenses: ['free'] }], license_types: [{ id: 'free', terms_url: `${origin}/terms`, terms_hash: 'sha256:' + '0'.repeat(64), scope: ['commercial'] }] });
   try {
-    const child = spawn(process.execPath, [...process.execArgv.filter(x => x === '--experimental-global-webcrypto'), ...childOptions, new URL('../client.mjs', import.meta.url).pathname], { env: { ...process.env, PROVIDER_ORIGIN: origin }, stdio: ['ignore', 'pipe', 'pipe'] });
+    const child = spawn(process.execPath, [...process.execArgv.filter(x => x === '--experimental-global-webcrypto'), ...childOptions, new URL('../client.mjs', import.meta.url).pathname], { env: { ...process.env, PROVIDER_ORIGIN: origin, ITEM_ID: 'item', LICENSE_TYPE: 'free' }, stdio: ['ignore', 'pipe', 'pipe'] });
     let output = ''; child.stdout.on('data', b => output += b); child.stderr.on('data', b => output += b);
     const timer = setTimeout(() => child.kill('SIGKILL'), 8000);
     const code = await new Promise((resolve, reject) => { child.on('error', reject); child.on('close', resolve); }); clearTimeout(timer);
@@ -101,7 +101,7 @@ async function scenario(mode) {
     if (fixtureDir) await rm(fixtureDir, { recursive: true, force: true });
   }
 }
-for (const mode of ['attacker-get', 'wrong-root-get', 'rollback-get', 'different-projection-post', 'post-wrapper-array', 'post-wrapper-null', 'post-wrapper-empty', 'manifest-author', 'manifest-time', 'manifest-scope', ...['manifest','post','get'].flatMap(stage => ['duplicate','escaped','nested','bom','utf8'].map(kind => `${stage}-${kind}`))]) {
+for (const mode of ['attacker-get', 'wrong-root-get', 'rollback-get', 'continuation-get', 'different-projection-post', 'post-wrapper-array', 'post-wrapper-null', 'post-wrapper-empty', 'manifest-author', 'manifest-time', 'manifest-scope', ...['manifest','post','get'].flatMap(stage => ['duplicate','escaped','nested','bom','utf8'].map(kind => `${stage}-${kind}`))]) {
   test(`actual HTTP200 consumer rejects ${mode}`, async () => {
     const r = await scenario(mode); assert.equal(r.code, 1, r.output);
     if (mode.startsWith('post-') || mode === 'different-projection-post') assert.equal(r.gets, 0);
@@ -115,7 +115,7 @@ for (const mode of ['attacker-get', 'wrong-root-get', 'rollback-get', 'different
     if (mode.endsWith('-utf8')) assert.match(r.output, /UTF8_INVALID/);
   });
 }
-for (const mode of ['legit', 'anchors', 'continuation-get']) {
+for (const mode of ['legit', 'anchors']) {
   test(`actual HTTP200 consumer accepts ${mode}`, async () => {
     const r = await scenario(mode); assert.equal(r.code, 0, r.output); assert.equal(r.gets, 1);
   });
