@@ -8,7 +8,18 @@
 
 **Status:** v1 draft. `free-attribution` licensing runs end to end; a payment resolver is planned for v1.1.
 
-[Website](https://www.proofmeta.com/) · [Manifest Generator](https://www.proofmeta.com/generate) · [Verifier](https://www.proofmeta.com/verify) · [Specification](./SPEC.md)
+[Website](https://www.proofmeta.com/) · [Manifest Generator](https://www.proofmeta.com/generate) · [Verifier](https://www.proofmeta.com/verify) · [Specification](./SPEC.md) · [Documentation](./docs/README.md)
+
+---
+
+## Where to start
+
+| You are… | Start with | Tool |
+|---|---|---|
+| Publishing content, data or tools and want agents to know your terms | [docs/publish-a-policy.md](./docs/publish-a-policy.md) | [Generator](https://www.proofmeta.com/generate) or `npx @proofmeta/cli init` |
+| Building a site, API or agent that answers license requests | [docs/become-a-provider.md](./docs/become-a-provider.md) | `npm install @proofmeta/sdk-ts` |
+| Building an agent that reads terms and requests licenses | [docs/build-a-consumer.md](./docs/build-a-consumer.md) | `npm install @proofmeta/sdk-ts`, `npx @proofmeta/cli fetch <domain>` |
+| Implementing the protocol in another language | [docs/implement-the-protocol.md](./docs/implement-the-protocol.md) | `packages/spec` schemas and vectors |
 
 ---
 
@@ -141,17 +152,19 @@ A payment resolver entry (for example, Stripe) is planned for v1.1.
 
 ## Install
 
-From npm:
+Use the published packages; no checkout needed:
 
 ```sh
-npm install @proofmeta/sdk-ts
+npm install @proofmeta/sdk-ts          # create, sign, verify, accept envelopes; requestLicense()
+npx @proofmeta/cli fetch example.com   # read and verify a published manifest
+npx @proofmeta/cli validate chain.json # diagnose any envelope or chain
 ```
+
+Node >= 18; on Node 18 set `NODE_OPTIONS=--experimental-global-webcrypto`.
 
 Current tree versions: `@proofmeta/sdk-ts` 0.7.0, `@proofmeta/cli` 0.6.0, `@proofmeta/spec` 0.4.0, `@proofmeta/resolver-free` 0.3.0. SDK 0.7.0 is not published by this change; npm publishing follows the release workflow.
 
-To build, test, and run the reference provider, consumer, and CLI from a checkout: [docs/INSTALL.md](./docs/INSTALL.md).
-
-The SDK and examples use portable Node.js APIs. Only the repository's pinned post-install smoke check is limited to Linux x64.
+Building this repository from source (reference provider and consumer, tests, the browser bundle) uses a pinned, audited install sequence meant for contributors: [CONTRIBUTING.md](./CONTRIBUTING.md), [docs/INSTALL.md](./docs/INSTALL.md). The SDK and examples use portable Node.js APIs; only that pinned post-install smoke check is limited to Linux x64.
 
 ## Repository structure
 

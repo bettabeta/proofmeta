@@ -5,8 +5,18 @@ ProofMeta is an open protocol. This repository holds the specification, the sche
 ## Start here
 
 1. Read [`SPEC.md`](./SPEC.md). It is the protocol. A behavior that is not in that file is not decided.
-2. Follow [`docs/INSTALL.md`](./docs/INSTALL.md).
+2. Build from source with the pinned sequence (details and why in [`docs/INSTALL.md`](./docs/INSTALL.md) and [`docs/SUPPLY-CHAIN.md`](./docs/SUPPLY-CHAIN.md)); Linux x64, fresh clone:
+
+   ```sh
+   node scripts/version-p1-install-smoke.mjs --preinstall &&
+     npm ci --ignore-scripts --no-audit &&
+     node scripts/version-p1-install-smoke.mjs &&
+     npm run build
+   ```
+
+   Users of the published packages never run this; `npm install @proofmeta/sdk-ts` and `npx @proofmeta/cli` are the user path.
 3. Before a pull request, run `npm test` and `node --test scripts/test/site-manifest.test.mjs`. The manifest check stays outside `npm test` because the root `package.json` is byte-pinned.
+4. Documentation lives in [`docs/README.md`](./docs/README.md), organised by role (publisher, Provider, Consumer, implementer). A new guide goes there; process documents stay in the "Building, releasing, process" section.
 
 ## What belongs in this repository
 
