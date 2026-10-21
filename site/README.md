@@ -22,14 +22,8 @@ Static homepage for the ProofMeta Protocol. Deployed on Vercel from this subfold
   describes (bundle, `SPEC.md`, `license.txt`), re-sign with
   `PROOFMETA_SITE_SEED=… node scripts/sign-site-manifest.mjs`; hashes are recomputed from
   the files. `node scripts/sign-site-manifest.mjs --check` runs in CI.
-- `vercel.json` — redirects + security headers
-- `scanner/` — *(to be added)* legacy ProofMeta Scanner, moved here from root
-
-## Redirects
-
-Scanner URLs that used to live at the root (e.g. `/report`, `/thanks`) should be added
-to `vercel.json` under `redirects` with `"permanent": true` once the Scanner files are
-moved into `scanner/`.
+- `requests.html` — static `request_endpoint` target declared in the site manifest; explains that no automated endpoint exists yet
+- `vercel.json` — security headers, CORS and `Content-Type` for `/.well-known/proofmeta.json`
 
 ## Local preview
 

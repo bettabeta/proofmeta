@@ -5,7 +5,6 @@
   ProofMeta Protocol — homepage (v3)
   Positioning: open infrastructure for machine-readable licensing (agentic era)
   - GitHub: https://github.com/bettabeta/proofmeta
-  -         https://github.com/bettabeta/proofmeta-license-contracts
   - MailerLite embed: account 2287781 / formId in mailerlite.config.js
 -->
 <meta charset="utf-8">
@@ -656,9 +655,9 @@
         <p>ed25519 signatures, DID identity (<code>did:key</code>), JCS canonical hashing. Cryptographic foundation for every protocol message.</p>
       </div>
       <div class="component">
-        <div class="c-no">SEMANTICS <span class="status-badge spec">SEPARATE ADD-ON</span></div>
-        <h3>License Contracts</h3>
-        <p>Optional <a href="https://github.com/bettabeta/proofmeta-license-contracts" target="_blank" rel="noopener"><code>proofmeta-license-contracts</code></a> add-on: chain-agnostic license semantics, pricing models and ready-made templates. One JSON object per permission surface.</p>
+        <div class="c-no">SEMANTICS <span class="status-badge spec">NORMATIVE · v1 DRAFT</span></div>
+        <h3>Scope Vocabulary</h3>
+        <p>Eight core tags every agent understands — <code>commercial</code>, <code>ai-training-excluded</code>, <code>attribution-required</code>, … — plus URL extensions for anything provider- or jurisdiction-specific. <a href="https://github.com/bettabeta/proofmeta/blob/main/docs/scope-vocabulary.md" target="_blank" rel="noopener">docs/scope-vocabulary.md</a></p>
       </div>
       <div class="component">
         <div class="c-no">TOOLING <span class="status-badge spec">PUBLISHED · npm</span></div>
@@ -813,20 +812,19 @@ SUSPENDED → REVOKED (terminal)</pre>
     <h2>Implement the rights layer. <span class="amber">No waitlist.</span></h2>
     <p>The specification is Apache 2.0 and open for implementation. Clone it. Run the demo. Attach permission metadata to your first artefact.</p>
 
-<pre class="code"><span class="c"># 1. read the spec</span>
+<pre class="code"><span class="c"># 1. use the SDK in your agent or API</span>
+<span class="k">$</span> npm install <span class="s">@proofmeta/sdk-ts</span>
+
+<span class="c"># 2. check any manifest or envelope chain</span>
+<span class="k">$</span> npx <span class="s">@proofmeta/cli</span> validate proofmeta.json
+
+<span class="c"># 3. read the spec, run the reference provider and consumer</span>
 <span class="k">$</span> git clone <span class="s">https://github.com/bettabeta/proofmeta</span>
-
-<span class="c"># 2. install the SDK + run the end-to-end demo</span>
-<span class="k">$</span> cd proofmeta <span class="s">&amp;&amp;</span> npm install <span class="s">&amp;&amp;</span> npm run e2e
-
-<span class="c"># 3. browse license templates</span>
-<span class="k">$</span> git clone <span class="s">https://github.com/bettabeta/proofmeta-license-contracts</span>
-
-<span class="c"># 4. wrap an artefact — see examples/ for starting points</span></pre>
+<span class="c">#    build from source: CONTRIBUTING.md (pinned install, then npm run e2e)</span></pre>
 
     <div class="cta-row">
       <a class="btn" href="https://github.com/bettabeta/proofmeta" target="_blank" rel="noopener">ProofMeta repository →</a>
-      <a class="btn ghost" href="https://github.com/bettabeta/proofmeta-license-contracts" target="_blank" rel="noopener">License Contracts →</a>
+      <a class="btn ghost" href="https://github.com/bettabeta/proofmeta/blob/main/SPEC.md" target="_blank" rel="noopener">SPEC.md →</a>
     </div>
 
     <div class="builder-thread-embed ml-form-loading" id="builder-thread-embed" hidden>
