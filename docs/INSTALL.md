@@ -1,16 +1,19 @@
 # Install
 
-## Just use the SDK
+## Use the published packages
 
 ```sh
-npm install @proofmeta/sdk-ts
+npm install @proofmeta/sdk-ts     # library: envelopes, acceptance, requestLicense()
+npx @proofmeta/cli --help         # init, keygen, hash, sign, fetch, accept, validate
 ```
 
-See [Consume a manifest](../packages/sdk-ts/README.md#consume-a-manifest) for the manifest-to-license helper and the [reference consumer](../examples/consumer/client.mjs) for a runnable example.
+Nothing below is needed for that. Role guides: [publish-a-policy.md](./publish-a-policy.md), [become-a-provider.md](./become-a-provider.md), [build-a-consumer.md](./build-a-consumer.md). API detail: [`packages/sdk-ts/README.md`](../packages/sdk-ts/README.md), [`packages/cli/README.md`](../packages/cli/README.md).
 
-The SDK and examples use portable Node.js APIs. The pinned post-install smoke check below is Linux x64 only because it directly verifies the `@esbuild/linux-x64` binary. On Node 18, prefix test and CLI commands with `NODE_OPTIONS=--experimental-global-webcrypto`.
+The SDK and examples use portable Node.js APIs. On Node 18, prefix test and CLI commands with `NODE_OPTIONS=--experimental-global-webcrypto`.
 
-To build and test this repository from source:
+## Build this repository from source
+
+For contributors and anyone who wants to run the reference provider and consumer, the test suite, or rebuild the browser bundle. The install is pinned: `package.json` and the lockfile are byte-checked, and a post-install gate verifies the dependency graph. That gate is Linux x64 only because it directly verifies the `@esbuild/linux-x64` binary; on other platforms you can still `npm ci --ignore-scripts && npm run build`, without the gate's guarantee.
 
 From the root of a fresh clone (the first command rejects an existing `node_modules`, and npm must not start if it fails):
 
@@ -29,9 +32,10 @@ node examples/provider/server.mjs # serves http://127.0.0.1:4100/.well-known/pro
 node examples/consumer/client.mjs # requests a free-attribution license and verifies the signed chain
 ```
 
-Check a file with the CLI, for example the provider's manifest:
+Check the running provider with the CLI from the checkout:
 
 ```sh
+node packages/cli/bin/proofmeta.mjs fetch http://127.0.0.1:4100
 curl -s http://127.0.0.1:4100/.well-known/proofmeta.json > manifest.json
 node packages/cli/bin/proofmeta.mjs validate manifest.json
 ```
