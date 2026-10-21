@@ -16,6 +16,44 @@ node packages/cli/bin/proofmeta.mjs --help
 
 PRE/POST admit only the pinned graph. They are not a hostile-checkout/TOCTOU sandbox, nor a generic global-install/npx guarantee; see [docs/SUPPLY-CHAIN.md](../../docs/SUPPLY-CHAIN.md). Node 18 needs `NODE_OPTIONS=--experimental-global-webcrypto` for cryptographic commands.
 
+From npm: `npx @proofmeta/cli <command>`.
+
+## Publish: `init`, `keygen`, `hash`, `sign`
+
+`init` writes everything a publisher hosts for one policy preset: the signed manifest, the terms text the manifest hashes, a static `requests.html` for the `request_endpoint`, and hosting notes. It prompts for missing values on a terminal; in scripts pass every flag.
+
+```sh
+npx @proofmeta/cli init --list-presets
+npx @proofmeta/cli init --name "Example Press" --origin https://example.com --preset attribution-no-training --contact hello@example.com
+# → ./proofmeta-site/.well-known/proofmeta.json
+#   ./proofmeta-site/.well-known/proofmeta-terms/attribution-no-training.txt
+#   ./proofmeta-site/requests.html
+#   ./proofmeta-site/proofmeta-key.json   (only when no --key was given; never upload it)
+#   ./proofmeta-site/README.txt
+```
+
+Presets (`open-attribution`, `attribution-no-training`, `non-commercial-no-training`, `ask-first`) select core scope tags only and generate a plain-language terms text that restates them. They add no protocol semantics. The manifest is self-checked with SDK `manifest` acceptance before anything is written; a failed self-check writes nothing and exits 1.
+
+```sh
+npx @proofmeta/cli keygen --out key.json           # prints the did:key; file mode 0600
+npx @proofmeta/cli hash terms.txt                  # sha256:<hex> for terms_hash / content_hash
+npx @proofmeta/cli sign payload.json --key key.json --out envelope.json [--in-reply-to sha256:…]
+```
+
+`sign` wraps any payload object with a `type` and self-checks the result: manifests through full acceptance, everything else through inspection (signature, hash, schema; no lifecycle context). Exit 1 on a failed self-check, with the envelope still written or printed so the error can be inspected.
+
+Key files are JSON. With `PROOFMETA_PASSPHRASE` set, `keygen` and `init` write them encrypted (PBKDF2-SHA256, 600000 iterations, AES-256-GCM) and `sign`/`init --key` read them with the same variable or an interactive prompt. The format is the one the browser generator's key backup uses, so a key created in either place works in the other. Plain files carry `private_key_hex` and are accepted as well.
+
+## Read: `fetch`
+
+```sh
+npx @proofmeta/cli fetch example.com            # GET https://example.com/.well-known/proofmeta.json
+npx @proofmeta/cli fetch https://example.com/custom/manifest.json
+npx @proofmeta/cli fetch example.com --json     # SDK AcceptanceReport plus the final URL
+```
+
+`fetch` applies SDK `manifest` acceptance to the raw response bytes (1 MiB cap, 15 s timeout, redirects followed; the manifest is self-authenticating). Exit 0 only when accepted; 1 when rejected; 2 on network, HTTP or usage errors. The summary lists the signer, the signing time, the endpoints and every license type with its scope tags in plain words. It verifies who signed what under which scope; it does not fetch terms, prove delivery, payment or legal effect.
+
 ## `accept`: explicit operation, purpose and evidence
 
 Source and context files are read as bytes: fatal UTF-8, no leading BOM, no duplicate decoded keys, strict JSON domain. No stripping, coercion, URL/time normalization or raw-to-string replacement. Reports are always SDK AcceptanceReport JSON (`--json` is optional).
