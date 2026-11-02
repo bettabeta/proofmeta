@@ -102,7 +102,7 @@ Callers must distinguish validate/accept outcomes from crypto verification and p
 
 Requires Node >=18 and targets ES2022. On Node 18, crypto may require `NODE_OPTIONS=--experimental-global-webcrypto`.
 
-Build/dev pins: `@proofmeta/spec` 0.4.0, Ajv 8.18.0, ajv-formats 3.0.1, esbuild 0.28.2 and TypeScript 5.7.3. They are not SDK runtime dependencies. The lock resolves Ajv's transitive fast-uri to 3.1.8 (including nested instances). CLI/demos consume the SDK, never the reverse. Building from a monorepo checkout: [docs/INSTALL.md](../../docs/INSTALL.md). Guarantees and trust prerequisites of the pinned install: [docs/SUPPLY-CHAIN.md](../../docs/SUPPLY-CHAIN.md). Pinned-artifact notices: [THIRD-PARTY-NOTICES.md](./THIRD-PARTY-NOTICES.md).
+Build/dev pins: `@proofmeta/spec` 0.4.0, Ajv 8.18.0, ajv-formats 3.0.1, esbuild 0.28.2 and TypeScript 5.7.3. They are not SDK runtime dependencies. The lock resolves Ajv's transitive fast-uri to 3.1.9 (including nested instances). CLI/demos consume the SDK, never the reverse. Building from a monorepo checkout: [docs/INSTALL.md](../../docs/INSTALL.md). Guarantees and trust prerequisites of the pinned install: [docs/SUPPLY-CHAIN.md](../../docs/SUPPLY-CHAIN.md). Pinned-artifact notices: [THIRD-PARTY-NOTICES.md](./THIRD-PARTY-NOTICES.md).
 
 `@proofmeta/sdk-ts@0.6.0` keeps that split. `verifyEnvelope` and `verifyChain` fail closed on malformed input: signature syntax, the envelope timestamp UTC suffix, and `payload_hash` syntax return `{ ok: false, reason }` before crypto. They still do not report `accepted`.
 

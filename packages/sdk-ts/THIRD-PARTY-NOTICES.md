@@ -258,11 +258,11 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 ```
 
-## fast-uri 3.1.8 (BSD-3-Clause)
+## fast-uri 3.1.9 (BSD-3-Clause)
 
-Source: https://registry.npmjs.org/fast-uri/-/fast-uri-3.1.8.tgz
+Source: https://registry.npmjs.org/fast-uri/-/fast-uri-3.1.9.tgz
 
-Integrity: `sha512-GZMtZUTNRpOVIECoXwLNZS5xUGE+mVNbTB8h/7Rwh2TFWcBQiPzTgyZi05BF9UMZKkLJv8XBRJTlU7zg8+ZfMg==`
+Integrity: `sha512-hS/0Wt3Ya043oKXs0sIxrMpKQITXhMLIrVAKKXi4gozGC9v7YRWVnXIZzjNPTO02M9BdxLCWqK1yRXgNziVyJQ==`
 
 ### package/LICENSE
 

@@ -74,7 +74,7 @@ if (mode[0] === '--preinstall') {
 } else {
 const require = createRequire(new URL('../packages/sdk-ts/package.json', import.meta.url));
 const lock = JSON.parse(readFileSync(new URL('../package-lock.json', import.meta.url), 'utf8'));
-for (const [name, version] of Object.entries({ ajv: '8.18.0', 'ajv-formats': '3.0.1', esbuild: '0.28.2', typescript: '5.7.3', 'fast-uri': '3.1.8', '@proofmeta/spec': '0.4.0' })) {
+for (const [name, version] of Object.entries({ ajv: '8.18.0', 'ajv-formats': '3.0.1', esbuild: '0.28.2', typescript: '5.7.3', 'fast-uri': '3.1.9', '@proofmeta/spec': '0.4.0' })) {
   const manifest = name === '@proofmeta/spec'
     ? new URL('../packages/spec/package.json', import.meta.url)
     : require.resolve(`${name}/package.json`);
@@ -90,10 +90,10 @@ const validateDateTime = ajv.compile({ type: 'string', format: 'date-time' });
 assert.equal(validateDateTime('2026-01-01T00:00:00Z'), true);
 assert.equal(validateDateTime('not-a-date'), false);
 const ajvRequire = createRequire(require.resolve('ajv'));
-assert.equal(JSON.parse(readFileSync(ajvRequire.resolve('fast-uri/package.json'), 'utf8')).version, '3.1.8');
+assert.equal(JSON.parse(readFileSync(ajvRequire.resolve('fast-uri/package.json'), 'utf8')).version, '3.1.9');
 const fastUri = Object.entries(lock.packages).filter(([path]) => path.endsWith('node_modules/fast-uri'));
 assert.ok(fastUri.length > 0);
-for (const [path, metadata] of fastUri) assert.equal(metadata.version, '3.1.8', path);
+for (const [path, metadata] of fastUri) assert.equal(metadata.version, '3.1.9', path);
 assert.equal(process.platform, 'linux', 'This bounded check covers Linux x64 only, not the P2 runtime/platform matrix');
 assert.equal(process.arch, 'x64');
 assert.equal(process.env.ESBUILD_BINARY_PATH, undefined, 'No alternate binary permitted');
