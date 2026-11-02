@@ -12,6 +12,10 @@ Added `requestLicense`, a fail-closed consumer helper that accepts a signed mani
 
 Package line lifted onto `@proofmeta/sdk-ts@0.7.0`. No new CLI commands in this bump.
 
+### Dependencies
+
+`fast-uri` locked to `3.1.9` (via `ajv`) so `npm audit` in the release workflow clears GHSA-w74x-v6f9-j3xg and related advisories that blocked the `sdk-ts@0.7.0` publish.
+
 ### Specification cleanup (2026-10-20)
 
 `SPEC.md` no longer contains the development-tooling section (Claude Projects, Cursor, OpenClaw, Claude Code, or the scaffold that named `/packages/sdk-py` and `solana-anchor`). Later sections are renumbered: v1 scope is §7, success criteria §8, open questions §9, license §10. Review is not a protocol artifact; the specification does not define one, and the places that listed one no longer do. Schema `$id` values use `https://proofmeta.com/schemas/v1/`.
