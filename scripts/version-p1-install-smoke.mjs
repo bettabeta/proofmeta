@@ -14,10 +14,10 @@ if (mode[0] === '--preinstall') {
   // Updating these requires a separate graph/hook audit, not lock regeneration here.
   const approved = {
     'package.json': '57fa9e574776d0d93e707fdd14d7240c25a120bf87b6f8091405f97373659187',
-    'package-lock.json': '6f64c7f7d3b26a954cc844194fb1c1cc3a4df58cedfda6713555ca250a46bd37',
+    'package-lock.json': '8c5849ae8865aaedd8bcfcf6f31050dc150453eebbcbf8650e65ba065d6590b2',
     'examples/consumer/package.json': '5231345b4163fbad59826c19a3a1df0f454abe7feae0c2e75b3e63162ded84b9',
     'examples/provider/package.json': '6e2450a08575020399650024aa72658224b4dbf660ea7db39d2035a110d2bf29',
-    'packages/cli/package.json': 'd66f7897d1f1e67bbc77eab08f48b8c15babeaa466be8a5c5baca137ac8f751a',
+    'packages/cli/package.json': 'dd82239cb56dce807ac0d69224807bfd2063a30b512c45fd3c729ffc0cebd0f5',
     'packages/resolvers/free/package.json': '801dc7525679a3d965e4cb020e13895517a991464c5148e1391e53bd15c93119',
     'packages/sdk-ts/package.json': '7c72e37242940f4de9e95a9097677c0b89a60a8ed2519cd6c5662e4cf239692f',
     'packages/spec/package.json': 'f5a4c8dcf9ff97fd30dade432734b22665816fa080f4cf255dd638f59fde88c8'
@@ -74,7 +74,7 @@ if (mode[0] === '--preinstall') {
 } else {
 const require = createRequire(new URL('../packages/sdk-ts/package.json', import.meta.url));
 const lock = JSON.parse(readFileSync(new URL('../package-lock.json', import.meta.url), 'utf8'));
-for (const [name, version] of Object.entries({ ajv: '8.18.0', 'ajv-formats': '3.0.1', esbuild: '0.28.2', typescript: '5.7.3', 'fast-uri': '3.1.8', '@proofmeta/spec': '0.4.0' })) {
+for (const [name, version] of Object.entries({ ajv: '8.18.0', 'ajv-formats': '3.0.1', esbuild: '0.28.2', typescript: '5.7.3', 'fast-uri': '3.1.9', '@proofmeta/spec': '0.4.0' })) {
   const manifest = name === '@proofmeta/spec'
     ? new URL('../packages/spec/package.json', import.meta.url)
     : require.resolve(`${name}/package.json`);
@@ -90,10 +90,10 @@ const validateDateTime = ajv.compile({ type: 'string', format: 'date-time' });
 assert.equal(validateDateTime('2026-01-01T00:00:00Z'), true);
 assert.equal(validateDateTime('not-a-date'), false);
 const ajvRequire = createRequire(require.resolve('ajv'));
-assert.equal(JSON.parse(readFileSync(ajvRequire.resolve('fast-uri/package.json'), 'utf8')).version, '3.1.8');
+assert.equal(JSON.parse(readFileSync(ajvRequire.resolve('fast-uri/package.json'), 'utf8')).version, '3.1.9');
 const fastUri = Object.entries(lock.packages).filter(([path]) => path.endsWith('node_modules/fast-uri'));
 assert.ok(fastUri.length > 0);
-for (const [path, metadata] of fastUri) assert.equal(metadata.version, '3.1.8', path);
+for (const [path, metadata] of fastUri) assert.equal(metadata.version, '3.1.9', path);
 assert.equal(process.platform, 'linux', 'This bounded check covers Linux x64 only, not the P2 runtime/platform matrix');
 assert.equal(process.arch, 'x64');
 assert.equal(process.env.ESBUILD_BINARY_PATH, undefined, 'No alternate binary permitted');

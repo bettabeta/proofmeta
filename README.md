@@ -162,7 +162,7 @@ npx @proofmeta/cli validate chain.json # diagnose any envelope or chain
 
 Node >= 18; on Node 18 set `NODE_OPTIONS=--experimental-global-webcrypto`.
 
-Current tree versions: `@proofmeta/sdk-ts` 0.7.0, `@proofmeta/cli` 0.6.0, `@proofmeta/spec` 0.4.0, `@proofmeta/resolver-free` 0.3.0. SDK 0.7.0 is not published by this change; npm publishing follows the release workflow.
+Current tree versions: `@proofmeta/sdk-ts` 0.7.0, `@proofmeta/cli` 0.7.0, `@proofmeta/spec` 0.4.0, `@proofmeta/resolver-free` 0.3.0. npm publishing follows the release workflow.
 
 Building this repository from source (reference provider and consumer, tests, the browser bundle) uses a pinned, audited install sequence meant for contributors: [CONTRIBUTING.md](./CONTRIBUTING.md), [docs/INSTALL.md](./docs/INSTALL.md). The SDK and examples use portable Node.js APIs; only that pinned post-install smoke check is limited to Linux x64.
 
